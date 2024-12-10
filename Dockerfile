@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 RUN Rscript -e "install.packages('devtools', repos = 'https://cran.r-project.org')"
 
 # Install packages directly without specifying versions
-RUN Rscript -e "install.packages(c('AER', 'car', 'cragg', 'dynlm', 'ggplot2', 'lmtest', 'MASS', 'mfx', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', 'nnet'), repos = 'https://cran.r-project.org')"
+RUN Rscript -e "install.packages(c('AER', 'car', 'cragg', 'dynlm', 'ggplot2', 'lmtest', 'MASS', 'mfx', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', 'nnet','plumber'), repos = 'https://cran.r-project.org')"
 
 # Copy your R script into the container
 COPY plumber_app.R /app/plumber_app.R
@@ -29,3 +29,6 @@ EXPOSE 8000
 
 # Run the R script using plumber
 CMD ["Rscript", "/app/plumber_app.R"]
+
+
+
