@@ -12,26 +12,11 @@ RUN apt-get update && apt-get install -y \
     libfribidi-dev \
     && apt-get clean
 
-# Update devtools
+# Update R's package manager and ensure required dependencies are available
 RUN Rscript -e "install.packages('devtools', repos = 'https://cran.r-project.org')"
 
-# Install specific versions of required R packages with --no-lock
-RUN Rscript -e "devtools::install_version('AER', version = '1.2-14', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('car', version = '3.1-3', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('cragg', version = '0.0.1', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('dynlm', version = '0.3-6', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('ggplot2', version = '3.5-1', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('lmtest', version = '0.9-40', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('MASS', version = '7.3-61', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('mfx', version = '1.2-2', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('moments', version = '0.14-1', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('plm', version = '2.6-4', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('sandwich', version = '3.1-1', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('stargazer', version = '5.2-3', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('tseries', version = '0.10-58', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('urca', version = '1.3-4', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('vars', version = '1.6-1', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
-RUN Rscript -e "devtools::install_version('nnet', version = '7.3-19', repos = 'https://cran.r-project.org', INSTALL_opts = '--no-lock')"
+# Install packages directly without specifying versions
+RUN Rscript -e "install.packages(c('AER', 'car', 'cragg', 'dynlm', 'ggplot2', 'lmtest', 'MASS', 'mfx', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', 'nnet'), repos = 'https://cran.r-project.org')"
 
 # Copy your R script into the container
 COPY plumber_app.R /app/plumber_app.R
