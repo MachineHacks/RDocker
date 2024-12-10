@@ -1,7 +1,7 @@
 # Use the official R base image
 FROM rocker/r-ver:4.3.1
 
-# Install system dependencies required by R and packages
+# Install system dependencies required by R and R packages
 RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     libssl-dev \
@@ -10,25 +10,22 @@ RUN apt-get update && apt-get install -y \
     libfontconfig1-dev \
     libharfbuzz-dev \
     libfribidi-dev \
+    libx11-dev \
+    libjpeg-dev \
+    libpng-dev \
     && apt-get clean
 
-# Update R's package manager and ensure required dependencies are available
-RUN Rscript -e "install.packages('devtools', repos = 'https://cran.r-project.org')"
+# Update and install the plumber package
+RUN Rscript -e "install.packages('plumber', repos = 'https://cran.r-project.org')"
 
-# Install packages directly without specifying versions
-RUN Rscript -e "install.packages(c('AER', 'car', 'cragg', 'dynlm', 'ggplot2', 'lmtest', 'MASS', 'mfx', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', 'nnet','plumber'), repos = 'https://cran.r-project.org')"
-
-# Copy your R script into the container
+# Copy the R script
 COPY plumber_app.R /app/plumber_app.R
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Expose the port the API will run on
+# Expose port 8000
 EXPOSE 8000
 
-# Run the R script using plumber
+# Command to run the Plumber server
 CMD ["Rscript", "/app/plumber_app.R"]
-
-
-
