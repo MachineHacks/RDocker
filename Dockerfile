@@ -12,9 +12,8 @@ RUN apt-get update && apt-get install -y \
     libfribidi-dev \
     && apt-get clean
 	
-# Install Plumber from GitHub
-ARG PLUMBER_REF=main
-RUN Rscript -e "remotes::install_github('rstudio/plumber@${PLUMBER_REF}')"
+# Install required R packages
+RUN Rscript -e "install.packages('plumber', repos='https://cran.r-project.org')"
 
 # Expose API port
 EXPOSE 8000
