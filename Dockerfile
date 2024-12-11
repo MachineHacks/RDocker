@@ -31,4 +31,4 @@ EXPOSE 8000
 # Start the R server with plumber API
 #CMD ["Rscript", "library(plumber); plumb("/app/main.R")$run(port=8000, host='0.0.0.0')"]
 #ENTRYPOINT ["Rscript", "/app/Tetsting.R"]
-ENTRYPOINT ["Rscript", "main.R"]
+ENTRYPOINT ["Rscript", "/app/main.R"]
