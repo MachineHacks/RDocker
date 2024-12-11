@@ -27,4 +27,4 @@ WORKDIR /app
 EXPOSE 8000
 
 # Start the R server with plumber API
-ENTRYPOINT ["R","e", "libray(plumber); plumb("/app/plumber_app.R")$run(port=8000, host='0.0.0.0')"]
+ENTRYPOINT ["R","-e", "library(plumber); plumb("/app/plumber_app.R")$run(port=8000, host='0.0.0.0')"]
