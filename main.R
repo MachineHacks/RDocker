@@ -6,4 +6,4 @@ source("/app/plumber_app.R")
 # If you want to start a Plumber API
 library(plumber)
 pr <- plumb("/app/plumber_app.R")
-pr$run(port = 8000, host = "104.211.66.42")
+pr$run(port = 8000, host = "0.0.0.0")
