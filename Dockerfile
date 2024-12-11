@@ -11,11 +11,18 @@ RUN apt-get update && apt-get install -y \
     libharfbuzz-dev \
     libfribidi-dev \
     && apt-get clean
+	
+# Install Plumber from GitHub
+ARG PLUMBER_REF=main
+RUN Rscript -e "remotes::install_github('rstudio/plumber@${PLUMBER_REF}')"
 
-# Install required R packages
-RUN Rscript -e "install.packages('plumber', repos='https://cran.r-project.org')"
+# Expose API port
+EXPOSE 8000
 
-# Copy your R script into the container
+# Set entry point to run the Plumber API
+ENTRYPOINT ["R", "-e", "pr <- plumber::plumb(rev(commandArgs())[1]); args <- list(host = '0.0.0.0', port = 8000); if (packageVersion('plumber') >= '1.0.0') { pr$setDocs(TRUE) } else { args$swagger <- TRUE }; do.call(pr$run, args)"]
+
+# Copy your custom plumber script
 COPY plumber_app.R /app/plumber_app.R
 COPY Test.R /app/Test.R
 COPY Tetsting.R /app/Tetsting.R
@@ -23,8 +30,6 @@ COPY Tetsting.R /app/Tetsting.R
 # Set the working directory
 WORKDIR /app
 
-# Expose the port the API will run on
-EXPOSE 8000
+# Set default command to run your plumber app
+CMD ["/app/plumber_app.R"]
 
-# Start the R server with plumber API
-CMD ["Rscript", "-e", "library(plumber); pr <- plumber::plumb('/app/plumber_app.R'); pr$run(host='0.0.0.0', port=8000)"]
