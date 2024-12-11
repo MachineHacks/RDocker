@@ -42,6 +42,6 @@ function(req) {
 }
 
 # Run Plumber API
-pr <- plumber::plumb('/app/plumber_app.R') 
-cat("Starting the Plumber API...\n")
-pr$run(host = "0.0.0.0", port = 8000)
+#pr <- plumber::plumb('/app/plumber_app.R') 
+#cat("Starting the Plumber API...\n")
+#pr$run(host = "0.0.0.0", port = 8000)
