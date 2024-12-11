@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 	
 # Install required R packages
-RUN R -e "install.packages('plumber', repos='https://cran.r-project.org')"
+RUN R -e "install.packages(c('plumber', 'jsonlite'), repos='https://cran.r-project.org')"
 
 # Copy your R script into the container
 COPY plumber_app.R /app/plumber_app.R
@@ -27,4 +27,4 @@ WORKDIR /app
 EXPOSE 8000
 
 # Start the R server with plumber API
-ENTRYPOINT ["R","-e", "library(plumber); plumb("/app/plumber_app.R")$run(port=8000, host='0.0.0.0')"]
+ENTRYPOINT ["/usr/local/bin/R","-e", "library(plumber); plumb("/app/plumber_app.R")$run(port=8000, host='0.0.0.0')"]
