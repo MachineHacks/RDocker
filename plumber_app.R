@@ -73,7 +73,6 @@ function(req) {
   return(result)
 }
 
-
   # Initialize the Plumber API
 pr <- plumb("/app/plumber_app.R")  # Path to your R script
 
