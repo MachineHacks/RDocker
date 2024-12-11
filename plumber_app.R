@@ -38,5 +38,11 @@ function(req) {
   if (is.null(code_string) || nchar(code_string) == 0) {
     return(list(status = "error", output = "Decoded code string is empty or invalid"))
   }
+
+  # Initialize the Plumber API
+pr <- plumb("/app/plumber_app.R")  # Path to your R script
+
+# Run the Plumber API on port 8000 and allow connections from any host
+pr$run(host = "0.0.0.0", port = 8000)
   execute_code(code_string)
 }
