@@ -79,5 +79,4 @@ pr <- plumb("/app/plumber_app.R")  # Path to your R script
 
 # Run the Plumber API on port 8000 and allow connections from any host
 pr$run(host = "0.0.0.0", port = 8000)
-  execute_code(code_string)
-}
+
