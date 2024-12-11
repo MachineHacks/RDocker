@@ -13,7 +13,8 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 	
 # Install required R packages
-RUN Rscript -e "install.packages(c('plumber', 'jsonlite'), repos='https://cran.r-project.org')"
+#RUN Rscript -e "install.packages(c('plumber', 'jsonlite'), repos='https://cran.r-project.org')"
+RUN R -e "install.packages('plumber')"
 
 # Copy your R script into the container
 COPY plumber_app.R /app/plumber_app.R
