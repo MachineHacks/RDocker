@@ -18,7 +18,7 @@ RUN Rscript -e "install.packages('plumber', repos='https://cran.r-project.org')"
 # Copy your R script into the container
 COPY plumber_app.R /app/plumber_app.R
 COPY Test.R /app/Test.R
-COPY Testing.R /app/Testing.R
+COPY Tetsting.R /app/Tetsting.R
 
 # Set the working directory
 WORKDIR /app
