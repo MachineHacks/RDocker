@@ -1,5 +1,5 @@
 # Use the official R base image
-FROM rocker/r-ver:4.3.1
+FROM rocker/r-ver:4.4.2
 
 # Install system dependencies required by R and packages
 RUN apt-get update && apt-get install -y \
@@ -28,5 +28,5 @@ WORKDIR /app
 EXPOSE 8000
 
 # Start the R server with plumber API
-ENTRYPOINT ["Rscript", "library(plumber); plumb("/app/main.R")$run(port=8000, host='0.0.0.0')"]
+CMD ["Rscript", "library(plumber); plumb("/app/main.R")$run(port=8000, host='0.0.0.0')"]
 #ENTRYPOINT ["Rscript", "/app/Tetsting.R"]
