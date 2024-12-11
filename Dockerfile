@@ -25,4 +25,4 @@ WORKDIR /app
 EXPOSE 8000
 
 # Start the R server with plumber API
-CMD ["Rscript", "-e", "library(plumber); pr <- plumber::plumb('/app/plumber_app.R'); pr$run(host='0.0.0.0', port=8000)"]
+CMD ["Rscript", "/app/plumber_app.R"]
