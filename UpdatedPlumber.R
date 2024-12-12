@@ -6,12 +6,16 @@ function() {
   return(list(message = "The Docker container and Plumber API are working!"))
 }
 
-# Function to normalize R code by removing comments, fixing spacing, and ensuring semicolons
+# Function to normalize R code by removing comments after the '#' symbol, fixing spacing, and ensuring semicolons
 normalize_code <- function(code_string) {
-  # Remove comments (everything after #) but preserve other code structure
-  code_string <- gsub("#.*", "", code_string)  # Remove comments
-  code_string <- gsub("\\s+", " ", code_string)  # Replace multiple spaces with a single space
-  code_string <- trimws(code_string)  # Trim leading/trailing spaces
+  # Remove the comment portion (everything after #) while preserving the rest of the code
+  code_string <- gsub("#.*$", "", code_string)  # Remove comments after #
+  
+  # Replace multiple spaces with a single space
+  code_string <- gsub("\\s+", " ", code_string)
+  
+  # Trim leading/trailing spaces
+  code_string <- trimws(code_string)
   
   # Ensure there's a semicolon at the end of each line (if not a comment line)
   code_string <- gsub("([^;])\n", "\\1;", code_string)  # Add semicolon at the end of each line
