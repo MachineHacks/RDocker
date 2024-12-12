@@ -1,3 +1,7 @@
+# Run the Python Flask app (this starts the Flask server)
+system("python3 /app/app_raw.py &")  # Running Python in the background
+sys.sleep(5)
+
 # main.R
 source("/app/UpdatedPlumber.R")
 #source("/app/Test.R")
