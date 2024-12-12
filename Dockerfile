@@ -26,7 +26,7 @@ COPY Test.R /app/Test.R
 COPY Tetsting.R /app/Tetsting.R
 COPY main.R /app/main.R
 COPY plumber_app.R /app/UpdatedPlumber.R
-COPY app_raw.py /app/app_raw.py  # Copy Python script into container
+COPY app_raw.py /app/app_raw.py
 
 # Set the working directory
 WORKDIR /app
