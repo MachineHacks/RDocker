@@ -1,3 +1,30 @@
+# Function to process and normalize R code
+normalize_code <- function(code_string) {
+  # Remove comments (everything after #)
+  code_string <- gsub("#.*", "", code_string)
+  
+  # Remove extra spaces between words
+  code_string <- gsub("\\s+", " ", code_string)
+  
+  # Trim leading and trailing whitespace
+  code_string <- trimws(code_string)
+  
+  # Add semicolons at the end of each line if not present
+  code_string <- gsub("([^;])\n", "\\1;", code_string)
+  
+  # Replace double semicolons (;;) with a single semicolon (;)
+  code_string <- gsub(";;", ";", code_string)
+  
+  # Ensure there is only one semicolon at the end of each line
+  code_string <- gsub(";$", "", code_string)  # Remove trailing semicolons
+  code_string <- paste(code_string, ";", sep = "")  # Add one semicolon at the end
+  
+  # Return the normalized code
+  return(code_string)
+}
+
+# Example R code as input
+code_string <- '
 library(plumber)
 
 # Simple GET endpoint to check if the API is working
@@ -83,3 +110,10 @@ function(req) {
 # Run this on the terminal:
 # pr <- plumb("your_script_name.R") 
 # pr$run(port = 8000)
+'
+
+# Process the code by normalizing it
+normalized_code <- normalize_code(code_string)
+
+# Print the normalized code
+cat(normalized_code)
