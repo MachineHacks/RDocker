@@ -51,15 +51,16 @@ execute_code <- function(code_string) {
 #* @post /execute
 function(req) {
   tryCatch({
-    # Extract the body content
-    raw_body <- req$body
+    # Extract the raw body content
+    raw_body <- req$rook$input$read()  # Use rook's input to get raw data
+    
+    # Check if the raw_body is empty or invalid
+    if (length(raw_body) == 0) {
+      stop("Request body is empty.")
+    }
     
     # Convert the raw body to a UTF-8 character string
-    if (is.raw(raw_body)) {
-      code_string <- rawToChar(raw_body)
-    } else {
-      stop("Request body is not in raw format.")
-    }
+    code_string <- rawToChar(raw_body)
     
     # Ensure the input is UTF-8 encoded
     code_string <- iconv(code_string, from = "UTF-8", to = "UTF-8")
