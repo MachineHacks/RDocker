@@ -1,5 +1,3 @@
-back up od docker file running 
-
 # Use the official R base image
 FROM rocker/r-ver:4.4.2
 
