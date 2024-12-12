@@ -45,33 +45,19 @@ normalize_quotes <- function(code_string) {
 #* @post /execute
 function(req) {
   # Get the body content of the request
-  body_content <- req$body
+  body_content <- req$postBody
   
-  # Check if the body is in raw format
-  if (is.character(body_content)) {
-    # If it is not raw, treat it as text
-    code_string <- body_content
-  } else if (is.raw(body_content)) {
-    # If the body is raw, convert it to character
-    code_string <- rawToChar(body_content)
-  } else {
-    # If neither raw nor text, return an error
-    return(list(status = "error", output = "The body content is not recognized"))
+  # Check if the body is valid
+  if (is.null(body_content) || nchar(body_content) == 0) {
+    return(list(status = "error", output = "Request body is empty or invalid"))
   }
   
   # Print the raw body content for debugging purposes
-  cat("Raw body content:", code_string, "\n")
+  cat("Raw body content:", body_content, "\n")
   
-  # Normalize quotes and line endings if necessary
-  code_string <- normalize_quotes(code_string)
-  
-  # Remove \r characters (carriage returns) from the code string
+  # Normalize quotes and line endings
+  code_string <- normalize_quotes(body_content)
   code_string <- gsub("\r", "", code_string)
-  
-  # Ensure the code string is valid
-  if (is.null(code_string) || nchar(code_string) == 0) {
-    return(list(status = "error", output = "Decoded code string is empty or invalid"))
-  }
   
   # Execute the R code and return the result
   result <- execute_code(code_string)
@@ -80,7 +66,8 @@ function(req) {
   return(result)
 }
 
-# Run the Plumber API with a specific port
-# Run this on the terminal: 
-# pr <- plumb("your_script_name.R") 
+# To run this script:
+# Save this code to a file, e.g., `api.R`, then execute the following commands:
+# library(plumber)
+# pr <- plumb("api.R")
 # pr$run(port = 8000)
