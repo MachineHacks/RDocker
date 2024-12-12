@@ -6,17 +6,21 @@ function() {
   print("The Docker container and Plumber API are working!")
   return(list(message = "The Docker container and Plumber API are working!"))
 }
-
 # Function to execute R code from a string
 execute_code <- function(code_string) {
   tryCatch({
-    # Normalize the input: Remove carriage returns, normalize quotes, and trim whitespace
-    code_string <- gsub("\r", "", code_string)  # Remove carriage returns
-    code_string <- gsub("\\s+$", "", code_string)  # Remove trailing spaces
-    code_string <- trimws(code_string)           # Trim overall whitespace
+    # Convert input to UTF-8 encoding
+    code_string <- iconv(code_string, from = "UTF-8", to = "UTF-8")
     
-    # Print the sanitized code for debugging purposes
-    cat("Sanitized R Code for Execution:\n", code_string, "\n\n")
+    # Normalize input: Remove carriage returns, trim whitespace, and normalize quotes
+    code_string <- gsub("\r", "", code_string)  # Remove carriage returns
+    code_string <- trimws(code_string)         # Trim whitespace
+    
+    # Handle file paths in `read.csv` or similar functions (normalize quotes)
+    code_string <- gsub("read\\.csv\\([\"']([^\"']+)[\"']\\)", "read.csv('\\1')", code_string)
+    
+    # Print the sanitized code for debugging
+    cat("Sanitized UTF-8 R Code for Execution:\n", code_string, "\n\n")
     
     # Evaluate the R code
     eval_output <- eval(parse(text = code_string))
@@ -36,15 +40,18 @@ function(req) {
     # Extract the body content
     raw_body <- req$body
     
-    # Convert the raw body to a character string
+    # Convert the raw body to a UTF-8 character string
     if (is.raw(raw_body)) {
       code_string <- rawToChar(raw_body)
     } else {
       stop("Request body is not in raw format.")
     }
     
+    # Ensure the input is UTF-8 encoded
+    code_string <- iconv(code_string, from = "UTF-8", to = "UTF-8")
+    
     # Print the raw code for debugging
-    cat("Raw R Code Received:\n", code_string, "\n")
+    cat("Raw UTF-8 R Code Received:\n", code_string, "\n")
     
     # Normalize the code: Remove carriage returns and extra whitespace
     code_string <- gsub("\r", "", code_string)
