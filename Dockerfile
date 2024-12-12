@@ -21,6 +21,7 @@ COPY plumber_app.R /app/plumber_app.R
 COPY Test.R /app/Test.R
 COPY Tetsting.R /app/Tetsting.R
 COPY main.R /app/main.R
+COPY plumber_app.R /app/UpdatedPlumber.R
 
 # Set the working directory
 WORKDIR /app
