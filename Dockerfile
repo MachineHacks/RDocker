@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
 RUN R -e "install.packages('plumber')"
 
 # Install Python packages (you can add any additional packages you need)
-RUN pip3 install pandas numpy  # Example of Python dependencies
+RUN pip3 install pandas numpy
 
 # Copy your R scripts into the container
 COPY plumber_app.R /app/plumber_app.R
