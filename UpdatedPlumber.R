@@ -6,6 +6,7 @@ function() {
   print("The Docker container and Plumber API are working!")
   return(list(message = "The Docker container and Plumber API are working!"))
 }
+
 # Function to execute R code from a string
 execute_code <- function(code_string) {
   tryCatch({
@@ -16,14 +17,27 @@ execute_code <- function(code_string) {
     code_string <- gsub("\r", "", code_string)  # Remove carriage returns
     code_string <- trimws(code_string)         # Trim whitespace
     
-    # Handle file paths in `read.csv` or similar functions (normalize quotes)
-    code_string <- gsub("read\\.csv\\([\"']([^\"']+)[\"']\\)", "read.csv('\\1')", code_string)
-    
     # Print the sanitized code for debugging
     cat("Sanitized UTF-8 R Code for Execution:\n", code_string, "\n\n")
     
-    # Evaluate the R code
-    eval_output <- eval(parse(text = code_string))
+    # Try to parse the code
+    parsed_code <- tryCatch({
+      parse(text = code_string)
+    }, error = function(e) {
+      return(NULL)
+    })
+    
+    # If parsing fails, return an error
+    if (is.null(parsed_code)) {
+      return(list(status = "error", output = "Failed to parse code."))
+    }
+    
+    # Execute the parsed R code
+    eval_output <- tryCatch({
+      eval(parsed_code)
+    }, error = function(e) {
+      return(paste("Error during execution:", e$message))
+    })
     
     # Return the evaluation output as a string
     return(list(status = "success", output = as.character(eval_output)))
