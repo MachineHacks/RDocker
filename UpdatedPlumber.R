@@ -7,86 +7,79 @@ function() {
   return(list(message = "The Docker container and Plumber API are working!"))
 }
 
+# Normalize the R code by removing carriage returns, extra spaces, and trimming
+normalize_code <- function(code_string) {
+  # Remove carriage returns and extra spaces
+  code_string <- gsub("\r", "", code_string)  # Remove carriage returns
+  code_string <- gsub("\\s+", " ", code_string)  # Replace multiple spaces with a single space
+  code_string <- trimws(code_string)  # Trim leading/trailing spaces
+  return(code_string)
+}
+
 # Function to execute R code from a string
 execute_code <- function(code_string) {
   tryCatch({
-    # Print the provided code for debugging
+    # Normalize the code before execution
+    code_string <- normalize_code(code_string)
+    
+    # Print the provided code for debugging purposes
     cat("Executing the following code:\n")
     cat(code_string, "\n\n")
     
-    # Parse and evaluate the R code
-    parsed_code <- tryCatch({
-      parse(text = code_string)
-    }, error = function(e) {
-      return(NULL)
-    })
+    # Execute the R code
+    eval_output <- eval(parse(text = code_string))
     
-    # If parsing fails, return an error
-    if (is.null(parsed_code)) {
-      return(list(status = "error", output = "Failed to parse code"))
-    }
+    # Print the output of the execution
+    cat("\nOutput of the Code Execution:\n")
+    print(eval_output)
     
-    # Execute the parsed R code
-    eval_output <- tryCatch({
-      eval(parsed_code)
-    }, error = function(e) {
-      return(paste("Error during execution:", e$message))
-    })
-    
-    # Return the output of the execution
+    # Return the output as a list
     return(list(status = "success", output = as.character(eval_output)))
   }, error = function(e) {
     # Handle errors gracefully
+    cat("\nAn error occurred while executing the code:\n")
+    cat(e$message, "\n")
     return(list(status = "error", output = paste("Error during execution:", e$message)))
   })
 }
 
-# Function to normalize file path quotes (for read.csv)
-normalize_quotes <- function(code_string) {
-  # Normalize file path quotes for read.csv
-  code_string <- gsub('read\\.csv\\("([^"]*)"\\)', 'read.csv(\'\\1\')', code_string)
-  return(code_string)
-}
-
-# Define Plumber API endpoint
+# Define Plumber API endpoint for executing R code
 #* @post /execute
 function(req) {
-  tryCatch({
-    # Check if the body content is in raw format
-    body_content <- req$body
-    
-    # If it's not raw, treat it as text
-    if (is.character(body_content)) {
-      code_string <- body_content
-    } else if (is.raw(body_content)) {
-      # If it's raw, convert it to character
-      code_string <- rawToChar(body_content)
-    } else {
-      return(list(status = "error", output = "The body content is not recognized"))
-    }
-    
-    # Print the raw body for debugging purposes
-    cat("Raw body content:\n", code_string, "\n")
-    
-    # Normalize quotes if necessary (for functions like read.csv)
-    code_string <- normalize_quotes(code_string)
-    
-    # Ensure the code string is valid
-    if (is.null(code_string) || nchar(code_string) == 0) {
-      return(list(status = "error", output = "Decoded code string is empty or invalid"))
-    }
-    
-    # Execute the R code and return the result
-    result <- execute_code(code_string)
-    
-    # Return the result
-    return(result)
-  }, error = function(e) {
-    # Handle and return error responses
-    return(list(status = "error", output = paste("Error during request processing:", e$message)))
-  })
+  # Get the body content of the request
+  body_content <- req$body
+  
+  # Check if the body is raw or text
+  if (is.character(body_content)) {
+    # If it is not raw, treat it as text
+    code_string <- body_content
+  } else if (is.raw(body_content)) {
+    # If the body is raw, convert it to character
+    code_string <- rawToChar(body_content)
+  } else {
+    # If neither raw nor text, return an error
+    return(list(status = "error", output = "The body content is not recognized"))
+  }
+  
+  # Print the raw body content for debugging purposes
+  cat("Raw body content:", code_string, "\n")
+  
+  # Normalize code before execution
+  code_string <- normalize_code(code_string)
+  
+  # Ensure the code string is valid
+  if (is.null(code_string) || nchar(code_string) == 0) {
+    return(list(status = "error", output = "Decoded code string is empty or invalid"))
+  }
+  
+  # Execute the R code and return the result
+  result <- execute_code(code_string)
+  
+  # Return the result to the client
+  return(result)
 }
 
-# Run the Plumber API
-# pr <- plumb("your_script_name.R")
+# Run the Plumber API with a specific port
+# Run this on the terminal:
+# pr <- plumb("your_script_name.R") 
 # pr$run(port = 8000)
