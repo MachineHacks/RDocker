@@ -1,55 +1,36 @@
-# Function to process and normalize R code
-normalize_code <- function(code_string) {
-  # Remove comments (everything after #)
-  code_string <- gsub("#.*", "", code_string)
-  
-  # Remove extra spaces between words
-  code_string <- gsub("\\s+", " ", code_string)
-  
-  # Trim leading and trailing whitespace
-  code_string <- trimws(code_string)
-  
-  # Add semicolons at the end of each line if not present
-  code_string <- gsub("([^;])\n", "\\1;", code_string)
-  
-  # Replace double semicolons (;;) with a single semicolon (;)
-  code_string <- gsub(";;", ";", code_string)
-  
-  # Ensure there is only one semicolon at the end of each line
-  code_string <- gsub(";$", "", code_string)  # Remove trailing semicolons
-  code_string <- paste(code_string, ";", sep = "")  # Add one semicolon at the end
-  
-  # Return the normalized code
-  return(code_string)
-}
-
-# Example R code as input
-code_string <- '
 library(plumber)
 
 # Simple GET endpoint to check if the API is working
 #* @get /test
 function() {
-  print("The Docker container and Plumber API are working!")
   return(list(message = "The Docker container and Plumber API are working!"))
 }
 
-# Normalize the R code by removing carriage returns, extra spaces, and trimming
+# Function to normalize R code by removing comments, fixing spacing, and ensuring semicolons
 normalize_code <- function(code_string) {
-  # Remove carriage returns and extra spaces
-  code_string <- gsub("\r", "", code_string)  # Remove carriage returns
+  # Remove comments (everything after #) but preserve other code structure
+  code_string <- gsub("#.*", "", code_string)  # Remove comments
   code_string <- gsub("\\s+", " ", code_string)  # Replace multiple spaces with a single space
   code_string <- trimws(code_string)  # Trim leading/trailing spaces
+  
+  # Ensure there's a semicolon at the end of each line (if not a comment line)
+  code_string <- gsub("([^;])\n", "\\1;", code_string)  # Add semicolon at the end of each line
+  
+  # Replace double semicolons (;;) with a single semicolon
+  code_string <- gsub(";;", ";", code_string)  # Replace ;; with ;
+  
+  # Ensure the final semicolon if needed
+  code_string <- gsub(";$", "", code_string)  # Remove any trailing semicolons
+  code_string <- paste(code_string, ";", sep = "")  # Add one semicolon at the end if not present
+  
+  # Return the normalized code
   return(code_string)
 }
 
 # Function to execute R code from a string
 execute_code <- function(code_string) {
   tryCatch({
-    # Normalize the code before execution
-    code_string <- normalize_code(code_string)
-    
-    # Print the provided code for debugging purposes
+    # Print the provided code
     cat("Executing the following code:\n")
     cat(code_string, "\n\n")
     
@@ -60,7 +41,7 @@ execute_code <- function(code_string) {
     cat("\nOutput of the Code Execution:\n")
     print(eval_output)
     
-    # Return the output as a list
+    # Return the output
     return(list(status = "success", output = as.character(eval_output)))
   }, error = function(e) {
     # Handle errors gracefully
@@ -70,28 +51,37 @@ execute_code <- function(code_string) {
   })
 }
 
-# Define Plumber API endpoint for executing R code
+# Function to normalize file path quotes (for read.csv)
+normalize_quotes <- function(code_string) {
+  # Normalize file path quotes
+  code_string <- gsub('read\\.csv\\("([^"]*)"\\)', 'read.csv(\'\\1\')', code_string)
+  return(code_string)
+}
+
+# Define Plumber API endpoint
 #* @post /execute
 function(req) {
-  # Get the body content of the request
+  # Check if the body is in raw format
   body_content <- req$body
   
-  # Check if the body is raw or text
   if (is.character(body_content)) {
     # If it is not raw, treat it as text
     code_string <- body_content
   } else if (is.raw(body_content)) {
-    # If the body is raw, convert it to character
+    # If the body is raw, convert to character
     code_string <- rawToChar(body_content)
   } else {
     # If neither raw nor text, return an error
     return(list(status = "error", output = "The body content is not recognized"))
   }
   
-  # Print the raw body content for debugging purposes
+  # Print the raw body for debugging purposes
   cat("Raw body content:", code_string, "\n")
   
-  # Normalize code before execution
+  # Normalize quotes if necessary
+  code_string <- normalize_quotes(code_string)
+  
+  # Normalize the code
   code_string <- normalize_code(code_string)
   
   # Ensure the code string is valid
@@ -102,18 +92,6 @@ function(req) {
   # Execute the R code and return the result
   result <- execute_code(code_string)
   
-  # Return the result to the client
+  # Return the result
   return(result)
 }
-
-# Run the Plumber API with a specific port
-# Run this on the terminal:
-# pr <- plumb("your_script_name.R") 
-# pr$run(port = 8000)
-'
-
-# Process the code by normalizing it
-normalized_code <- normalize_code(code_string)
-
-# Print the normalized code
-cat(normalized_code)
