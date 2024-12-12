@@ -1,17 +1,13 @@
 library(plumber)
 
-# Simple GET endpoint to check if the API is working
-#* @get /test
-function() {
-  print("The Docker container and Plumber API are working!")
-  return(list(message = "The Docker container and Plumber API are working!"))
-}
-
 # Function to execute R code from a string
 execute_code <- function(code_string) {
   tryCatch({
     # Normalize line endings by removing \r characters
     code_string <- gsub("\r", "", code_string)
+    
+    # Trim unnecessary spaces
+    code_string <- trimws(code_string)
     
     # Print the provided code for debugging purposes
     cat("Executing the following code:\n")
@@ -45,19 +41,34 @@ normalize_quotes <- function(code_string) {
 #* @post /execute
 function(req) {
   # Get the body content of the request
-  body_content <- req$postBody
+  body_content <- req$body
   
-  # Check if the body is valid
-  if (is.null(body_content) || nchar(body_content) == 0) {
-    return(list(status = "error", output = "Request body is empty or invalid"))
+  # Check if the body is in raw format
+  if (is.character(body_content)) {
+    # If it is not raw, treat it as text
+    code_string <- body_content
+  } else if (is.raw(body_content)) {
+    # If the body is raw, convert it to character
+    code_string <- rawToChar(body_content)
+  } else {
+    # If neither raw nor text, return an error
+    return(list(status = "error", output = "The body content is not recognized"))
   }
   
   # Print the raw body content for debugging purposes
-  cat("Raw body content:", body_content, "\n")
+  cat("Raw body content:", code_string, "\n")
   
-  # Normalize quotes and line endings
-  code_string <- normalize_quotes(body_content)
+  # Normalize quotes and line endings if necessary
+  code_string <- normalize_quotes(code_string)
+  
+  # Remove \r characters and trim spaces
   code_string <- gsub("\r", "", code_string)
+  code_string <- trimws(code_string)
+  
+  # Ensure the code string is valid
+  if (is.null(code_string) || nchar(code_string) == 0) {
+    return(list(status = "error", output = "Decoded code string is empty or invalid"))
+  }
   
   # Execute the R code and return the result
   result <- execute_code(code_string)
@@ -66,8 +77,7 @@ function(req) {
   return(result)
 }
 
-# To run this script:
-# Save this code to a file, e.g., `api.R`, then execute the following commands:
-# library(plumber)
-# pr <- plumb("api.R")
+# Run the Plumber API
+# Run this on the terminal: 
+# pr <- plumb("your_script_name.R") 
 # pr$run(port = 8000)
