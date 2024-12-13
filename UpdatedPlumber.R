@@ -85,18 +85,3 @@ function(req) {
 # pr <- plumb("your_script_name.R") 
 # pr$run(port = 8000)
 
-# Test the execute_code function with an example input
-test_code <- "
-
-x <- 2
-y <- 3
-z <- x + y
-z
-"
-
-# Call the function
-result <- execute_code(test_code)
-
-# Print the result
-print(result)
-
