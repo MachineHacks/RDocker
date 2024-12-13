@@ -27,7 +27,7 @@ COPY plumber_app.R /app/UpdatedPlumber.R
 WORKDIR /app
 
 # Expose the port the API will run on
-EXPOSE 5000
+EXPOSE 8000
 
 # Start the R server with plumber API
 #CMD ["Rscript", "library(plumber); plumb("/app/main.R")$run(port=8000, host='0.0.0.0')"]
