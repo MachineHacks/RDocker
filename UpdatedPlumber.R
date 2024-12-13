@@ -41,28 +41,10 @@ normalize_quotes <- function(code_string) {
   return(code_string)
 }
 
-# Function to parse JSON or plain text
-parse_body <- function(body_content, content_type) {
-  if (grepl("application/json", content_type)) {
-    tryCatch({
-      # Parse JSON if Content-Type is application/json
-      jsonlite::fromJSON(body_content)
-    }, error = function(e) {
-      stop("Failed to parse JSON: ", e$message)
-    })
-  } else {
-    # Assume plain text if Content-Type is not JSON
-    body_content
-  }
-}
-
 # Define Plumber API endpoint
 #* @post /execute
 function(req) {
   try {
-    # Get the Content-Type header
-    content_type <- req$HTTP_CONTENT_TYPE
-
     # Get the body content of the request
     body_content <- req$postBody
 
@@ -71,22 +53,8 @@ function(req) {
       return(list(status = "error", output = "The request body is empty or invalid"))
     }
 
-    # Parse the request body based on Content-Type
-    parsed_body <- parse_body(body_content, content_type)
-
-    # If the parsed body is JSON, extract the "code" key
-    if (is.list(parsed_body)) {
-      if (!"code" %in% names(parsed_body)) {
-        return(list(status = "error", output = "JSON must contain a 'code' key"))
-      }
-      code_string <- parsed_body$code
-    } else {
-      # Treat as plain text
-      code_string <- parsed_body
-    }
-
     # Normalize the code by removing carriage returns and unnecessary spaces
-    code_string <- gsub("\r", "", code_string)
+    code_string <- gsub("\r", "", body_content)
     code_string <- trimws(code_string)
 
     # Print the raw body content for debugging purposes
