@@ -3,21 +3,16 @@ library(plumber)
 restricted_commands <- c(
   "file.remove", "unlink", "system", "system2", "shell", "download.file",
   "url", "gc", "assign", "rm", "environment", "Sys.info", "dir.create",
-  "list.files", "setwd","detach", 
+  "list.files", "setwd", "detach", 
   "remove.packages", "unloadNamespace"
 )
 
 # Helper function to check for restricted commands
 is_code_safe <- function(code_string) {
-  # Block restricted commands but allow `install.packages`
   for (cmd in restricted_commands) {
-    # Check if the command appears in the input code
+    # Check if the restricted command appears in the input code
     if (grepl(cmd, code_string, fixed = TRUE)) {
-      # Allow install.packages explicitly
-      if (cmd == "library" && grepl("install\\.packages", code_string)) {
-        next
-      }
-      return(FALSE) # Code is unsafe if any other restricted command is found
+      return(FALSE) # Code is unsafe if any restricted command is found
     }
   }
   return(TRUE) # Code is safe if no restricted command is found
@@ -35,6 +30,11 @@ execute_code <- function(code_string) {
   tryCatch({
     # Normalize line endings by removing \r characters
     code_string <- gsub("\r", "", code_string)
+    
+    # Check if the code contains restricted commands
+    if (!is_code_safe(code_string)) {
+      stop("The code contains restricted commands and cannot be executed.")
+    }
     
     # Print the provided code for debugging purposes
     cat("Executing the following code:\n")
@@ -107,4 +107,3 @@ function(req) {
 # Run this on the terminal: 
 # pr <- plumb("your_script_name.R") 
 # pr$run(port = 8000)
-
