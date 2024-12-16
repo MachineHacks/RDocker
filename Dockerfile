@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 
 # Install required R packages
-RUN R -e "install.packages(c('plumber', 'jsonlite'), repos='https://cran.r-project.org')"
+RUN R -e "install.packages('plumber')"
 
 # Install additional R packages and their dependencies
 RUN R -e "install.packages(c('AER', 'cragg', 'dynlm', 'Mfx', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', 'brant', 'erer', 'nnet', 'marginaleffects', 'usmap'), repos='https://cran.r-project.org')"
