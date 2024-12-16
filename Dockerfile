@@ -18,9 +18,12 @@ RUN apt-get update && apt-get install -y \
 
 # Install required R packages
 RUN R -e "install.packages('plumber')"
+RUN R -e "install.packages('car')"
+RUN R -e "install.packages('dynlm')"
+RUN R -e "install.packages('Mfx')"
 
 # Install additional R packages and their dependencies
-RUN R -e "install.packages(c('AER','car','AER', 'cragg', 'dynlm', 'Mfx', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', 'brant', 'erer', 'nnet', 'marginaleffects', 'usmap'), repos='https://cran.r-project.org')"
+RUN R -e "install.packages(c('AER', 'cragg', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', 'brant', 'erer', 'nnet', 'marginaleffects', 'usmap'), repos='https://cran.r-project.org')"
 
 # Copy your R scripts into the container
 COPY plumber_app.R /app/plumber_app.R
