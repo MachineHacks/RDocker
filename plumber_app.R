@@ -17,7 +17,7 @@ is_code_safe <- function(code_string) {
 }
 
 # Simple GET endpoint to check if the API is working
-#* @get /Ping
+#* @get /ping
 function() {
   print("I am alive, use the rconsole execute method to run the R program")
   return(list(message = "I am alive, use the rconsole execute method to run the R program"))
