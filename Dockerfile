@@ -10,18 +10,24 @@ RUN apt-get update && apt-get install -y \
     libfontconfig1-dev \
     libharfbuzz-dev \
     libfribidi-dev \
+    libgdal-dev \
+    libproj-dev \
+    libgeos-dev \
+    libudunits2-dev \
     && apt-get clean
-	
-# Install required R packages
-#RUN Rscript -e "install.packages(c('plumber', 'jsonlite'), repos='https://cran.r-project.org')"
-RUN R -e "install.packages('plumber')"
 
-# Copy your R script into the container
+# Install required R packages
+RUN R -e "install.packages(c('plumber', 'jsonlite'), repos='https://cran.r-project.org')"
+
+# Install additional R packages and their dependencies
+RUN R -e "install.packages(c('AER', 'cragg', 'dynlm', 'Mfx', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', 'brant', 'erer', 'nnet', 'marginaleffects', 'usmap'), repos='https://cran.r-project.org')"
+
+# Copy your R scripts into the container
 COPY plumber_app.R /app/plumber_app.R
 COPY Test.R /app/Test.R
 COPY Tetsting.R /app/Tetsting.R
 COPY main.R /app/main.R
-COPY plumber_app.R /app/UpdatedPlumber.R
+COPY UpdatedPlumber.R /app/UpdatedPlumber.R
 
 # Set the working directory
 WORKDIR /app
@@ -30,6 +36,4 @@ WORKDIR /app
 EXPOSE 8000
 
 # Start the R server with plumber API
-#CMD ["Rscript", "library(plumber); plumb("/app/main.R")$run(port=8000, host='0.0.0.0')"]
-#ENTRYPOINT ["Rscript", "/app/Tetsting.R"]
 ENTRYPOINT ["Rscript", "/app/main.R"]
