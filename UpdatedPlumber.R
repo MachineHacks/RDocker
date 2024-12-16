@@ -1,5 +1,28 @@
 library(plumber)
 
+restricted_commands <- c(
+  "file.remove", "unlink", "system", "system2", "shell", "download.file",
+  "url", "gc", "assign", "rm", "environment", "Sys.info", "dir.create",
+  "list.files", "setwd","detach", 
+  "remove.packages", "unloadNamespace"
+)
+
+# Helper function to check for restricted commands
+is_code_safe <- function(code_string) {
+  # Block restricted commands but allow `install.packages`
+  for (cmd in restricted_commands) {
+    # Check if the command appears in the input code
+    if (grepl(cmd, code_string, fixed = TRUE)) {
+      # Allow install.packages explicitly
+      if (cmd == "library" && grepl("install\\.packages", code_string)) {
+        next
+      }
+      return(FALSE) # Code is unsafe if any other restricted command is found
+    }
+  }
+  return(TRUE) # Code is safe if no restricted command is found
+}
+
 # Simple GET endpoint to check if the API is working
 #* @get /test
 function() {
