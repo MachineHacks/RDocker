@@ -23,83 +23,66 @@ function() {
   return(list(message = "I am alive, use the rconsole execute method to run the R program"))
 }
 
-# Function to execute R code from a string
+# Normalize file path quotes
+normalize_quotes <- function(code_string) {
+  gsub('read\\.csv\\("([^"]*)"\\)', 'read.csv(\'\\1\')', code_string)
+}
+
+# Function to execute R code
 execute_code <- function(code_string) {
   tryCatch({
-    # Normalize line endings by removing \r characters
-    code_string <- gsub("\r", "", code_string)
+    code_string <- normalize_quotes(code_string)
+    code_string <- gsub("\r", "", code_string) # Normalize line endings
     
-    # Check if the code contains restricted commands
-    if (!is_code_safe(code_string)) {
-      stop("The code contains restricted commands and cannot be executed.")
-    }
-    
-    # Print the provided code for debugging purposes
-    cat("Executing the following code:\n")
-    cat(code_string, "\n\n")
-    
-    # Execute the R code
+    cat("Executing the following code:\n", code_string, "\n\n")
     eval_output <- eval(parse(text = code_string))
-    
-    # Print the output of the execution
     cat("\nOutput of the Code Execution:\n")
     print(eval_output)
     
-    # Return the output as a list
     return(list(status = "success", output = as.character(eval_output)))
   }, error = function(e) {
-    # Handle errors gracefully
-    cat("\nAn error occurred while executing the code:\n")
-    cat(e$message, "\n")
+    cat("\nAn error occurred while executing the code:\n", e$message, "\n")
     return(list(status = "error", output = paste("Error during execution:", e$message)))
   })
-}
-
-# Function to normalize file path quotes (for read.csv)
-normalize_quotes <- function(code_string) {
-  # Normalize file path quotes (optional, depending on the content)
-  code_string <- gsub('read\\.csv\\("([^"]*)"\\)', 'read.csv(\'\\1\')', code_string)
-  return(code_string)
 }
 
 # Define Plumber API endpoint
 #* @post /execute
 function(req) {
-  # Get the body content of the request
-  body_content <- req$body
+  # Parse JSON payload
+  body_content <- fromJSON(req$postBody, simplifyVector = FALSE)
   
-  # Check if the body is in raw format
-  if (is.character(body_content)) {
-    # If it is not raw, treat it as text
-    code_string <- body_content
-  } else if (is.raw(body_content)) {
-    # If the body is raw, convert it to character
-    code_string <- rawToChar(body_content)
-  } else {
-    # If neither raw nor text, return an error
-    return(list(status = "error", output = "The body content is not recognized"))
+  # Validate the structure of the JSON payload
+  if (!"files" %in% names(body_content) || !is.list(body_content$files) || length(body_content$files) == 0) {
+    return(list(status = "error", output = "Invalid JSON payload: 'files' array is missing or empty"))
   }
   
-  # Print the raw body content for debugging purposes
-  cat("Raw body content:", code_string, "\n")
+  # Process files and execute code
+  for (file in body_content$files) {
+    if (!is.null(file$name) && grepl("\\.csv$", file$name)) {
+      # Handle CSV file
+      temp_file <- tempfile(fileext = ".csv")
+      writeLines(file$content, temp_file)
+      cat("Saved CSV file to:", temp_file, "\n")
+    }
+  }
   
-  # Normalize quotes and line endings if necessary
-  code_string <- normalize_quotes(code_string)
-  
-  # Remove \r characters (carriage returns) from the code string
-  code_string <- gsub("\r", "", code_string)
-  
-  # Ensure the code string is valid
+  # Extract code to execute
+  code_string <- body_content$files[[1]]$content
   if (is.null(code_string) || nchar(code_string) == 0) {
-    return(list(status = "error", output = "Decoded code string is empty or invalid"))
+    return(list(status = "error", output = "Code content is empty or invalid"))
   }
   
-  # Execute the R code and return the result
-  result <- execute_code(code_string)
+  # Check for restricted commands
+  if (!is_code_safe(code_string)) {
+    return(list(status = "error", output = "Code contains restricted commands"))
+  }
   
-  # Return the result to the client
+  # Execute the code
+  result <- execute_code(code_string)
   return(result)
 }
+
 
 # Run the Plumber API with a specific port
 # Run this on the terminal: 
