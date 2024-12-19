@@ -1,4 +1,5 @@
 library(plumber)
+library(jsonlite)
 
 restricted_commands <- c(
   "install.packages",
