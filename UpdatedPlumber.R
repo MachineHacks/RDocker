@@ -81,7 +81,7 @@ function(req) {
   files <- body_content$files
   
   # Set the directory path for logs
-  log_dir <- "/container/directory/log" # Change this to your desired directory
+  log_dir <- "/container/directory" # Change this to your desired directory
   log_file <- generate_log_file_name(stdin_value, log_dir)
   
   # Process the code from the first file in the JSON
