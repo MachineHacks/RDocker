@@ -18,10 +18,10 @@ is_code_safe <- function(code_string) {
 }
 
 # Simple GET endpoint to check if the API is working
-#* @get /test
+#* @get /ping
 function() {
-  print("The Docker container and Plumber API are working!")
-  return(list(message = "The Docker container and Plumber API are working!"))
+  print("I am alive, use the rconsole execute method to run the R program")
+  return(list(message = "I am alive, use the rconsole execute method to run the R program"))
 }
 
 # Normalize file path quotes for consistency
