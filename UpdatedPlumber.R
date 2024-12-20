@@ -29,6 +29,25 @@ normalize_quotes <- function(code_string) {
   gsub('read\\.csv\\("([^"]*)"\\)', 'read.csv(\'\\1\')', code_string)
 }
 
+# Function to generate log file name with a path
+generate_log_file_name <- function(stdin_value, log_dir) {
+  if (!dir.exists(log_dir)) {
+    dir.create(log_dir, recursive = TRUE)
+  }
+  timestamp <- format(Sys.time(), "%d%m%y%H%M%S")
+  file.path(log_dir, paste0(stdin_value, "_", timestamp, ".txt"))
+}
+
+# Function to write request and response to log
+write_log <- function(log_file, request, response) {
+  cat("Request\n------------------------------------------------------------\n", 
+      request, "\n\n", 
+      "Response\n------------------------------------------------------------\n", 
+      toJSON(response, pretty = TRUE), "\n", 
+      file = log_file, append = FALSE)
+  cat("Log written to:", log_file, "\n")
+}
+
 # Function to execute R code
 execute_code <- function(code_string) {
   tryCatch({
@@ -53,34 +72,40 @@ function(req) {
   # Parse JSON payload
   body_content <- fromJSON(req$postBody, simplifyVector = FALSE)
   
-  # Validate the structure of the JSON payload
-  if (!"files" %in% names(body_content) || !is.list(body_content$files) || length(body_content$files) == 0) {
-    return(list(status = "error", output = "Invalid JSON payload: 'files' array is missing or empty"))
+  # Validate JSON structure
+  if (!"stdin" %in% names(body_content) || !"files" %in% names(body_content)) {
+    return(list(status = "error", output = "Invalid JSON payload: 'stdin' or 'files' missing"))
   }
   
-  # Process files and execute code
-  for (file in body_content$files) {
-    if (!is.null(file$name) && grepl("\\.csv$", file$name)) {
-      # Handle CSV file
-      temp_file <- tempfile(fileext = ".csv")
-      writeLines(file$content, temp_file)
-      cat("Saved CSV file to:", temp_file, "\n")
-    }
+  stdin_value <- body_content$stdin
+  files <- body_content$files
+  
+  # Set the directory path for logs
+  log_dir <- "D:/R_Project/log" # Change this to your desired directory
+  log_file <- generate_log_file_name(stdin_value, log_dir)
+  
+  # Process the code from the first file in the JSON
+  if (length(files) == 0 || !"content" %in% names(files[[1]])) {
+    response <- list(status = "error", output = "No valid code content provided")
+    write_log(log_file, req$postBody, response)
+    return(response)
   }
   
-  # Extract code to execute
-  code_string <- body_content$files[[1]]$content
-  if (is.null(code_string) || nchar(code_string) == 0) {
-    return(list(status = "error", output = "Code content is empty or invalid"))
-  }
+  code_string <- files[[1]]$content
   
   # Check for restricted commands
   if (!is_code_safe(code_string)) {
-    return(list(status = "error", output = "Code contains restricted commands"))
+    response <- list(status = "error", output = "Code contains restricted commands")
+    write_log(log_file, req$postBody, response)
+    return(response)
   }
   
   # Execute the code
   result <- execute_code(code_string)
+  
+  # Write to log file
+  write_log(log_file, req$postBody, result)
+  
   return(result)
 }
 
