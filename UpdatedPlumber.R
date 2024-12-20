@@ -17,6 +17,13 @@ is_code_safe <- function(code_string) {
   return(TRUE) # Code is safe if no restricted command is found
 }
 
+# Simple GET endpoint to check if the API is working
+#* @get /test
+function() {
+  print("The Docker container and Plumber API are working!")
+  return(list(message = "The Docker container and Plumber API are working!"))
+}
+
 # Normalize file path quotes for consistency
 normalize_quotes <- function(code_string) {
   gsub('read\\.csv\\("([^"]*)"\\)', 'read.csv(\'\\1\')', code_string)
