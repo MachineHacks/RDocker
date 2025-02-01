@@ -21,6 +21,9 @@ RUN R -e "install.packages('plumber')"
 RUN R -e "install.packages('car')"
 RUN R -e "install.packages('dynlm')"
 RUN R -e "install.packages('Mfx')"
+RUN R -e "install.packages('jsonlite')"
+RUN R -e "install.packages('jose')"
+RUN R -e "install.packages('digest')"
 
 # Install additional R packages and their dependencies
 RUN R -e "install.packages(c('AER', 'cragg', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', 'brant', 'erer', 'nnet', 'marginaleffects', 'usmap'), repos='https://cran.r-project.org')"
