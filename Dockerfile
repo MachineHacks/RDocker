@@ -24,6 +24,8 @@ RUN R -e "install.packages('Mfx')"
 RUN R -e "install.packages('jsonlite')"
 RUN R -e "install.packages('jose')"
 RUN R -e "install.packages('digest')"
+RUN R -e "install.packages('ini')"
+RUN R -e "install.packages('base64enc')"
 
 # Install additional R packages and their dependencies
 RUN R -e "install.packages(c('AER', 'cragg', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', 'brant', 'erer', 'nnet', 'marginaleffects', 'usmap'), repos='https://cran.r-project.org')"
