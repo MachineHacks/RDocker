@@ -36,6 +36,7 @@ COPY Test.R /app/Test.R
 COPY Tetsting.R /app/Tetsting.R
 COPY main.R /app/main.R
 COPY UpdatedPlumber.R /app/UpdatedPlumber.R
+COPY Config.ini /app/Config.ini
 
 # Set the working directory
 WORKDIR /app
