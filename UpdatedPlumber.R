@@ -1,5 +1,10 @@
-library(plumber)
 library(jsonlite)
+library(jose)
+library(digest)
+library(plumber)
+library(openssl)
+library(base64enc)
+library(ini)
 
 # Restricted commands to be avoided
 restricted_commands <- c(
@@ -17,134 +22,219 @@ is_code_safe <- function(code_string) {
   return(TRUE) # Code is safe if no restricted command is found
 }
 
-# Simple GET endpoint to check if the API is working
-#* @get /ping
-function() {
-  print("I am alive, use the rconsole execute method to run the R program")
-  return(list(message = "I am alive, use the rconsole execute method to run the R program"))
-}
-
 # Normalize file path quotes for consistency
 normalize_quotes <- function(code_string) {
   gsub('read\\.csv\\("([^"]*)"\\)', 'read.csv(\'\\1\')', code_string)
 }
 
-# Function to generate log file name based on stdin, files, or timestamp
-generate_log_file_name <- function(stdin_value, files, log_dir) {
-  # Ensure the log directory exists
-  if (!dir.exists(log_dir)) {
-    cat("Log directory does not exist. Creating:", log_dir, "\n")
-    dir.create(log_dir, recursive = TRUE)
-  }
+# Load configuration from INI file
+load_config <- function(config_path) {
+  config_list <- read.ini(config_path)
+  config_list[["SecretKey"]] <- NULL
   
-  # Generate log file name based on stdin, name in files, or timestamp
-  if (!is.null(stdin_value) && stdin_value != "") {
-    timestamp <- format(Sys.time(), "%d%m%y%H%M%S")
-    log_file_name <- paste0(stdin_value, "_", timestamp, ".txt")
-  } else {
-    # If stdin is missing, use the "name" field from files or default to "log"
-    if ("name" %in% names(files[[1]])) {
-      # Extract the file name before the first period (.)
-      file_name <- tools::file_path_sans_ext(files[[1]]$name)
-    } else {
-      file_name <- "log"
-    }
-    log_file_name <- paste0(file_name, "_", format(Sys.time(), "%d%m%y%H%M%S"), ".txt")
-  }
+  config_df <- do.call(rbind, lapply(config_list, function(x) {
+    data.frame(username = x$username,
+               password = x$password,
+               security_key = x$security_key,
+               stringsAsFactors = FALSE)
+  }))
   
-  # Construct the log file path
-  log_file_path <- file.path(log_dir, log_file_name)
-  
-  # Try opening the log file
-  tryCatch({
-    fileConn <- file(log_file_path, open = "w")
-    close(fileConn)
-    cat("Log file created successfully:", log_file_path, "\n")
-  }, error = function(e) {
-    cat("Error creating log file:", e$message, "\n")
-    stop("Unable to create log file. Please check permissions and file path.")
-  })
-  
-  return(log_file_path)
+  return(config_df)
 }
 
-# Function to write request and response to log file
-write_log <- function(log_file, request, response) {
-  tryCatch({
-    cat("Request\n------------------------------------------------------------\n", 
-        request, "\n\n", 
-        "Response\n------------------------------------------------------------\n", 
-        toJSON(response, pretty = TRUE), "\n", 
-        file = log_file, append = FALSE)
-    cat("Log written to:", log_file, "\n")
-  }, error = function(e) {
-    cat("Error writing to log file:", e$message, "\n")
-  })
+# Authenticate user against the stored config
+authenticate_user <- function(username, password, config) {
+  user_data <- config[config$username == username, ]  
+  
+  if (nrow(user_data) > 0 && user_data$password == password) {
+    security_key <- user_data$security_key
+    if (is.null(security_key)) {
+      return(list(error = "Security key not found for user"))
+    }
+    return(list(success = TRUE, security_key = security_key))  
+  } else {
+    return(list(error = "Invalid credentials"))  
+  }
 }
+
+# Generate JWT token
+#* @post /rtoken
+#* @serializer json
+rtoken <- function(req) {
+  username <- req$HTTP_USERNAME  
+  password <- req$HTTP_PASSWORD  
+  
+  if (is.null(username) || username == "") {
+    return(list(status = "error", output = "Missing username"))
+  }
+  if (is.null(password) || password == "") {
+    return(list(status = "error", output = "Missing password"))
+  }
+  
+  config_path <- "config.ini"
+  config <- load_config(config_path)
+  configread <- read.ini(config_path)
+  secret_key <- configread$SecretKey$secretkey
+  
+  auth_result <- authenticate_user(username, password, config)
+  
+  if (!is.list(auth_result) || !"success" %in% names(auth_result) || !auth_result$success) {
+    return(list(status = "error", output = "Invalid username or password"))
+  }
+  
+  security_key <- auth_result$security_key
+  if (is.null(security_key) || security_key == "") {
+    return(list(status = "error", output = "Security key not found for user"))
+  }
+  
+  expiration_time <- as.numeric(Sys.time()) + 3600  
+  
+  payload <- jwt_claim(
+    username = username, 
+    exp = expiration_time, 
+    security_key = security_key  
+  )
+  
+  key_raw <- charToRaw(secret_key)
+  token <- jwt_encode_hmac(payload, secret = key_raw)  
+  
+  return(list(status = "success", token = token))
+}
+
+# Decode JWT Token
+decode_token_info_hmac <- function(token, secret_key) {
+  if (is.null(token) || token == "") {
+    return(list(status = "error", output = "Empty JWT token"))
+  }
+  
+  key_raw <- charToRaw(secret_key)
+  
+  config_data <- tryCatch({
+    config_path = "config.ini"
+    load_config(config_path)
+  }, error = function(e) {
+    return(NULL)
+  })
+  
+  if (is.null(config_data)) {
+    return(list(status = "error", output = "Failed to load configuration"))
+  }
+  
+  expected_username <- config_data$username
+  expected_security_key <- config_data$security_key
+  
+  decoded_token <- tryCatch({
+    jwt_decode_hmac(token, secret = key_raw)
+  }, error = function(e) {
+    return(NULL)
+  })
+  
+  if (is.null(decoded_token)) {
+    return(list(status = "error", output = "Invalid JWT token"))
+  }
+  
+  decoded_username <- decoded_token$username
+  decoded_security_key <- decoded_token$security_key
+  
+  if (!(decoded_username %in% expected_username)) {
+    return(list(status = "error", output = "Invalid username in JWT"))
+  }
+  
+  if (!(decoded_security_key %in% expected_security_key)) {
+    return(list(status = "error", output = "Invalid security key in JWT"))
+  }
+  
+  return(list(
+    status = "success",
+    username = decoded_token$username,
+    security_key = decoded_token$security_key,
+    expiration_time = decoded_token$exp
+  ))
+}
+
+# Function to validate token
+validate_token <- function(token, config) {
+  configread <- read.ini("config.ini")
+  secret_key <- configread$SecretKey$secretkey
+  
+  decoded_info <- decode_token_info_hmac(token, secret_key)
+  
+  if (decoded_info$status != "success") {
+    return(list(valid = FALSE, error = "Invalid token format"))
+  }
+  
+  username <- decoded_info$username
+  security_key <- decoded_info$security_key
+  expiration_time <- decoded_info$expiration_time
+  
+  current_time <- as.numeric(Sys.time())
+  if (expiration_time < current_time) {
+    return(list(valid = FALSE, error = "Token expired"))
+  }
+  
+  user_data <- config[config$username == username, ]
+  
+  if (nrow(user_data) == 0) {
+    return(list(valid = FALSE, error = "Invalid username"))
+  }
+  
+  stored_security_key <- user_data$security_key
+  if (security_key != stored_security_key) {
+    return(list(valid = FALSE, error = "Invalid security key"))
+  }
+  
+  return(list(valid = TRUE, username = username))
+}
+
+# Decorator function to validate token 
+validate_token_decorator <- function(func) {
+  function(req) {
+    token <- req$HTTP_RTOKEN
+    if (is.null(token) || token == "") {
+      return(list(status = "error", output = "Missing token in headers"))
+    }
+    
+    config_path <- "config.ini"
+    config <- load_config(config_path)
+    
+    validation_result <- validate_token(token, config)
+    
+    if (!validation_result$valid) {
+      return(list(status = "error", output = validation_result$error))
+    }
+    
+    req$username <- validation_result$username  
+    func(req)  
+  }
+}
+
+#* @post /execute
+#* @param token The JWT token for authentication
+execute_method <- validate_token_decorator(function(req) {
+  body_content <- fromJSON(req$postBody, simplifyVector = FALSE)
+  
+  if (!("files" %in% names(body_content)) || length(body_content$files) == 0 || !"content" %in% names(body_content$files[[1]])) {
+    return(list(status = "error", output = "Invalid request format"))
+  }
+  
+  code_string <- body_content$files[[1]]$content
+  if (!is_code_safe(code_string)) {
+    return(list(status = "error", output = "Execution of restricted commands is not allowed"))
+  }
+  
+  code_string <- normalize_quotes(code_string)
+  execution_result <- execute_code(code_string)
+  
+  return(execution_result)
+})
 
 # Function to execute R code and handle errors
 execute_code <- function(code_string) {
   tryCatch({
-    code_string <- normalize_quotes(code_string)
-    code_string <- gsub("\r", "", code_string) # Normalize line endings
-    
-    cat("Executing the following code:\n", code_string, "\n\n")
+    code_string <- gsub("\r", "", code_string) 
     eval_output <- eval(parse(text = code_string))
-    cat("\nOutput of the Code Execution:\n")
-    print(eval_output)
-    
     return(list(status = "success", output = as.character(eval_output)))
   }, error = function(e) {
-    cat("\nAn error occurred while executing the code:\n", e$message, "\n")
     return(list(status = "error", output = paste("Error during execution:", e$message)))
   })
 }
-
-# Define the Plumber API endpoint
-#* @post /execute
-function(req) {
-  # Parse JSON payload
-  body_content <- fromJSON(req$postBody, simplifyVector = FALSE)
-  
-  # Validate JSON structure
-  if (!("files" %in% names(body_content))) {
-    return(list(status = "error", output = "Invalid JSON payload: 'files' missing"))
-  }
-  
-  stdin_value <- if ("stdin" %in% names(body_content)) body_content$stdin else NULL
-  files <- body_content$files
-  
-  # Set the directory path for logs
-  log_dir <- "/container/directory/logs" # Change this to your desired directory
-  log_file <- generate_log_file_name(stdin_value, files, log_dir)
-  
-  # Process the code from the first file in the JSON
-  if (length(files) == 0 || !"content" %in% names(files[[1]])) {
-    response <- list(status = "error", output = "No valid code content provided")
-    write_log(log_file, req$postBody, response)
-    return(response)
-  }
-  
-  code_string <- files[[1]]$content
-  
-  # Check for restricted commands
-  if (!is_code_safe(code_string)) {
-    response <- list(status = "error", output = "Code contains restricted commands")
-    write_log(log_file, req$postBody, response)
-    return(response)
-  }
-  
-  # Execute the code
-  result <- execute_code(code_string)
-  
-  # Write to log file
-  write_log(log_file, req$postBody, result)
-  
-  return(result)
-}
-
-
-# Run the Plumber API with a specific port
-# Run this on the terminal: 
-# pr <- plumb("your_script_name.R") 
-# pr$run(port = 8000)
