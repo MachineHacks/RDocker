@@ -80,8 +80,7 @@ rtoken <- function(req) {
   
   config_path <- "Config.ini"
   config <- load_config(config_path)
-  configread <- read.ini(config_path)
-  secret_key <- configread$SecretKey$secretkey
+  secret_key  <- "F3E996E7-0135-49C4-97F9-9E0F7CB6A70E"
   
   auth_result <- authenticate_user(username, password, config)
   
@@ -161,13 +160,12 @@ decode_token_info_hmac <- function(token, secret_key) {
 
 # Function to validate token
 validate_token <- function(token, config) {
-  configread <- read.ini("Config.ini")
-  secret_key <- configread$SecretKey$secretkey
+  secret_key  <- "F3E996E7-0135-49C4-97F9-9E0F7CB6A70E"
   
   decoded_info <- decode_token_info_hmac(token, secret_key)
   
   if (decoded_info$status != "success") {
-    return(list(valid = FALSE, error = "Invalid token format"))
+    return(list(valid = FALSE, error = "Invalid token"))
   }
   
   username <- decoded_info$username
@@ -198,7 +196,7 @@ validate_token_decorator <- function(func) {
   function(req) {
     token <- req$HTTP_RTOKEN
     if (is.null(token) || token == "") {
-      return(list(status = "error", output = "Missing token in headers"))
+      return(list(status = "error", output = "Missing token"))
     }
     
     config_path <- "Config.ini"
@@ -221,7 +219,7 @@ execute_method <- validate_token_decorator(function(req) {
   body_content <- fromJSON(req$postBody, simplifyVector = FALSE)
   
   if (!("files" %in% names(body_content)) || length(body_content$files) == 0 || !"content" %in% names(body_content$files[[1]])) {
-    return(list(status = "error", output = "Invalid request format"))
+    return(list(status = "error", output = "Invalid request"))
   }
   
   code_string <- body_content$files[[1]]$content
