@@ -22,6 +22,13 @@ is_code_safe <- function(code_string) {
   return(TRUE) # Code is safe if no restricted command is found
 }
 
+# Simple GET endpoint to check if the API is working
+#* @get /ping
+function() {
+  print("I am alive, use the rconsole execute method to run the R program")
+  return(list(message = "I am alive, use the rconsole execute method to run the R program"))
+}
+
 # Normalize file path quotes for consistency
 normalize_quotes <- function(code_string) {
   gsub('read\\.csv\\("([^"]*)"\\)', 'read.csv(\'\\1\')', code_string)
