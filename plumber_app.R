@@ -1,5 +1,7 @@
 library(plumber)
+library(jsonlite)
 
+# Restricted commands to be avoided
 restricted_commands <- c(
   "install.packages",
   "remove.packages"
@@ -8,7 +10,6 @@ restricted_commands <- c(
 # Helper function to check for restricted commands
 is_code_safe <- function(code_string) {
   for (cmd in restricted_commands) {
-    # Check if the restricted command appears in the input code
     if (grepl(cmd, code_string, fixed = TRUE)) {
       return(FALSE) # Code is unsafe if any restricted command is found
     }
@@ -23,83 +24,125 @@ function() {
   return(list(message = "I am alive, use the rconsole execute method to run the R program"))
 }
 
-# Function to execute R code from a string
+# Normalize file path quotes for consistency
+normalize_quotes <- function(code_string) {
+  gsub('read\\.csv\\("([^"]*)"\\)', 'read.csv(\'\\1\')', code_string)
+}
+
+# Function to generate log file name based on stdin, files, or timestamp
+generate_log_file_name <- function(stdin_value, files, log_dir) {
+  # Ensure the log directory exists
+  if (!dir.exists(log_dir)) {
+    cat("Log directory does not exist. Creating:", log_dir, "\n")
+    dir.create(log_dir, recursive = TRUE)
+  }
+  
+  # Generate log file name based on stdin, name in files, or timestamp
+  if (!is.null(stdin_value) && stdin_value != "") {
+    timestamp <- format(Sys.time(), "%d%m%y%H%M%S")
+    log_file_name <- paste0(stdin_value, "_", timestamp, ".txt")
+  } else {
+    # If stdin is missing, use the "name" field from files or default to "log"
+    if ("name" %in% names(files[[1]])) {
+      # Extract the file name before the first period (.)
+      file_name <- tools::file_path_sans_ext(files[[1]]$name)
+    } else {
+      file_name <- "log"
+    }
+    log_file_name <- paste0(file_name, "_", format(Sys.time(), "%d%m%y%H%M%S"), ".txt")
+  }
+  
+  # Construct the log file path
+  log_file_path <- file.path(log_dir, log_file_name)
+  
+  # Try opening the log file
+  tryCatch({
+    fileConn <- file(log_file_path, open = "w")
+    close(fileConn)
+    cat("Log file created successfully:", log_file_path, "\n")
+  }, error = function(e) {
+    cat("Error creating log file:", e$message, "\n")
+    stop("Unable to create log file. Please check permissions and file path.")
+  })
+  
+  return(log_file_path)
+}
+
+# Function to write request and response to log file
+write_log <- function(log_file, request, response) {
+  tryCatch({
+    cat("Request\n------------------------------------------------------------\n", 
+        request, "\n\n", 
+        "Response\n------------------------------------------------------------\n", 
+        toJSON(response, pretty = TRUE), "\n", 
+        file = log_file, append = FALSE)
+    cat("Log written to:", log_file, "\n")
+  }, error = function(e) {
+    cat("Error writing to log file:", e$message, "\n")
+  })
+}
+
+# Function to execute R code and handle errors
 execute_code <- function(code_string) {
   tryCatch({
-    # Normalize line endings by removing \r characters
-    code_string <- gsub("\r", "", code_string)
+    code_string <- normalize_quotes(code_string)
+    code_string <- gsub("\r", "", code_string) # Normalize line endings
     
-    # Check if the code contains restricted commands
-    if (!is_code_safe(code_string)) {
-      stop("The code contains restricted commands and cannot be executed.")
-    }
-    
-    # Print the provided code for debugging purposes
-    cat("Executing the following code:\n")
-    cat(code_string, "\n\n")
-    
-    # Execute the R code
+    cat("Executing the following code:\n", code_string, "\n\n")
     eval_output <- eval(parse(text = code_string))
-    
-    # Print the output of the execution
     cat("\nOutput of the Code Execution:\n")
     print(eval_output)
     
-    # Return the output as a list
     return(list(status = "success", output = as.character(eval_output)))
   }, error = function(e) {
-    # Handle errors gracefully
-    cat("\nAn error occurred while executing the code:\n")
-    cat(e$message, "\n")
+    cat("\nAn error occurred while executing the code:\n", e$message, "\n")
     return(list(status = "error", output = paste("Error during execution:", e$message)))
   })
 }
 
-# Function to normalize file path quotes (for read.csv)
-normalize_quotes <- function(code_string) {
-  # Normalize file path quotes (optional, depending on the content)
-  code_string <- gsub('read\\.csv\\("([^"]*)"\\)', 'read.csv(\'\\1\')', code_string)
-  return(code_string)
-}
-
-# Define Plumber API endpoint
+# Define the Plumber API endpoint
 #* @post /execute
 function(req) {
-  # Get the body content of the request
-  body_content <- req$body
+  # Parse JSON payload
+  body_content <- fromJSON(req$postBody, simplifyVector = FALSE)
   
-  # Check if the body is in raw format
-  if (is.character(body_content)) {
-    # If it is not raw, treat it as text
-    code_string <- body_content
-  } else if (is.raw(body_content)) {
-    # If the body is raw, convert it to character
-    code_string <- rawToChar(body_content)
-  } else {
-    # If neither raw nor text, return an error
-    return(list(status = "error", output = "The body content is not recognized"))
+  # Validate JSON structure
+  if (!("files" %in% names(body_content))) {
+    return(list(status = "error", output = "Invalid JSON payload: 'files' missing"))
   }
   
-  # Print the raw body content for debugging purposes
-  cat("Raw body content:", code_string, "\n")
+  stdin_value <- if ("stdin" %in% names(body_content)) body_content$stdin else NULL
+  files <- body_content$files
   
-  # Normalize quotes and line endings if necessary
-  code_string <- normalize_quotes(code_string)
+  # Set the directory path for logs
+  log_dir <- "/container/directory/logs" # Change this to your desired directory
+  log_file <- generate_log_file_name(stdin_value, files, log_dir)
   
-  # Remove \r characters (carriage returns) from the code string
-  code_string <- gsub("\r", "", code_string)
-  
-  # Ensure the code string is valid
-  if (is.null(code_string) || nchar(code_string) == 0) {
-    return(list(status = "error", output = "Decoded code string is empty or invalid"))
+  # Process the code from the first file in the JSON
+  if (length(files) == 0 || !"content" %in% names(files[[1]])) {
+    response <- list(status = "error", output = "No valid code content provided")
+    write_log(log_file, req$postBody, response)
+    return(response)
   }
   
-  # Execute the R code and return the result
+  code_string <- files[[1]]$content
+  
+  # Check for restricted commands
+  if (!is_code_safe(code_string)) {
+    response <- list(status = "error", output = "Code contains restricted commands")
+    write_log(log_file, req$postBody, response)
+    return(response)
+  }
+  
+  # Execute the code
   result <- execute_code(code_string)
   
-  # Return the result to the client
+  # Write to log file
+  write_log(log_file, req$postBody, result)
+  
   return(result)
 }
+
 
 # Run the Plumber API with a specific port
 # Run this on the terminal: 
