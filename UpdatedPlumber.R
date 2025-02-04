@@ -78,7 +78,7 @@ rtoken <- function(req) {
     return(list(status = "error", output = "Missing password"))
   }
   
-  config_path <- "config.ini"
+  config_path <- "Config.ini"
   config <- load_config(config_path)
   configread <- read.ini(config_path)
   secret_key <- configread$SecretKey$secretkey
@@ -117,7 +117,7 @@ decode_token_info_hmac <- function(token, secret_key) {
   key_raw <- charToRaw(secret_key)
   
   config_data <- tryCatch({
-    config_path = "config.ini"
+    config_path = "Config.ini"
     load_config(config_path)
   }, error = function(e) {
     return(NULL)
@@ -161,7 +161,7 @@ decode_token_info_hmac <- function(token, secret_key) {
 
 # Function to validate token
 validate_token <- function(token, config) {
-  configread <- read.ini("config.ini")
+  configread <- read.ini("Config.ini")
   secret_key <- configread$SecretKey$secretkey
   
   decoded_info <- decode_token_info_hmac(token, secret_key)
@@ -201,7 +201,7 @@ validate_token_decorator <- function(func) {
       return(list(status = "error", output = "Missing token in headers"))
     }
     
-    config_path <- "config.ini"
+    config_path <- "Config.ini"
     config <- load_config(config_path)
     
     validation_result <- validate_token(token, config)
