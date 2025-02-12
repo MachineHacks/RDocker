@@ -38,6 +38,7 @@ COPY Tetsting.R /app/Tetsting.R
 COPY main.R /app/main.R
 COPY UpdatedPlumber.R /app/UpdatedPlumber.R
 COPY Config.json /app/Config.json
+COPY Utility.R /app/Utility.R
 
 # Set the working directory
 WORKDIR /app
