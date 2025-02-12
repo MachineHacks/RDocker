@@ -83,13 +83,15 @@ execute_method <- validate_token_decorator(function(req) {
   return(execution_result)
 })
 
-# Fetch existing OpenAPI spec
-existing_spec <- pr$getApiSpec()
-existing_spec$info$title <- api_title
-existing_spec$info$description <- api_description
+pr <- plumb()
 
-# Apply updated spec
-pr$setApiSpec(existing_spec)
+# Attach routes
+pr$handle("GET", "/ping", ping)
+pr$handle("POST", "/rtoken", rtoken)
+pr$handle("POST", "/execute", execute_method)
 
-# Return the API object
-pr
+# Update OpenAPI Spec
+api_spec <- pr$getApiSpec()
+api_spec$info$title <- api_title
+api_spec$info$description <- api_description
+pr$setApiSpec(api_spec)
