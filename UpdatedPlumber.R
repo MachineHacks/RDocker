@@ -96,9 +96,6 @@ existing_spec$info$title <- api_title
 existing_spec$info$description <- api_description
 pr$setApiSpec(existing_spec)
 
-# Start API
-if (interactive()) {
-  pr$run(port = 8000, host = "0.0.0.0")
-}
+assign("pr", pr, envir = .GlobalEnv)
 
 
