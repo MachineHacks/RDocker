@@ -101,22 +101,15 @@ pr$handle("GET", "/ping", ping)
 pr$handle("POST", "/rtoken", rtoken)
 pr$handle("POST", "/execute", execute_method)
 
-#existing_spec <- pr$getApiSpec()
-#existing_spec$info$title <- "API Title: R-Console"
-#existing_spec$info$description <- "Tttttt"
-#pr$setApiSpec(existing_spec) 
-
-# Fetch existing OpenAPI spec
-existing_spec <- list(
+# Set OpenAPI metadata dynamically
+pr$setApiSpec(list(
   openapi = "3.0.3",
   info = list(
-    title = api_title,       # Use dynamic API title from config
-    description = api_description, # Use dynamic API description from config
+    title = api_title,        # Dynamic API title from config
+    description = api_description,  # Dynamic API description from config
     version = "1.0.0"
   )
-)
+))
 
-# Apply updated spec
-pr$setApiSpec(existing_spec)
 
 
