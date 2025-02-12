@@ -8,8 +8,16 @@ config <- load_config("Config.json")
 api_title <- config$API$TITLE
 api_description <- config$API$DESCRIPTION
 
-# Initialize Plumber API (use Plumber instead of plumber)
+# Initialize Plumber API
 pr <- Plumber$new()
+
+# Set API Metadata (for Swagger UI)
+#* @apiTitle Dynamic API Title
+#* @apiDescription Dynamic API Description
+existing_spec <- pr$getApiSpec()
+existing_spec$info$title <- api_title
+existing_spec$info$description <- api_description
+pr$setApiSpec(existing_spec)
 
 # Simple GET endpoint to check if the API is working
 #* @get /ping
@@ -88,13 +96,7 @@ pr$handle("GET", "/ping", ping)
 pr$handle("POST", "/rtoken", rtoken)
 pr$handle("POST", "/execute", execute_method)
 
-# Set API Metadata
-#* @apiTitle Dynamic API Title
-#* @apiDescription Dynamic API Description
-existing_spec <- pr$getApiSpec()
-existing_spec$info$title <- api_title
-existing_spec$info$description <- api_description
-pr$setApiSpec(existing_spec)
+
 
 assign("pr", pr, envir = .GlobalEnv)
 
