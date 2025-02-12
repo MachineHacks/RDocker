@@ -3,13 +3,27 @@
 library(plumber)
 source("Utility.R")  # Load the utility file
 
-config <- load_config("Config.json")
-# Extract API Metadata
+# Load API metadata from config.json
+config <- fromJSON("config.json")
 api_title <- config$API$TITLE
 api_description <- config$API$DESCRIPTION
 
-#* @apiTitle Dynamic API Title
-#* @apiDescription Dynamic API Description
+# Initialize Plumber API
+pr <- plumb()
+
+# Set Swagger API metadata
+pr <- pr %>%
+  pr_set_api_spec(list(
+    info = list(
+      title = api_title,
+      description = api_description,
+      version = "1.0.0"
+    )
+  ))
+
+# Define API Endpoints
+#* @apiTitle R-Console API
+#* @apiDescription R Compiler API for executing R scripts via RESTful interface
 
 
 # Simple GET endpoint to check if the API is working
@@ -83,17 +97,4 @@ execute_method <- validate_token_decorator(function(req) {
   return(execution_result)
 })
 
-pr <- plumb("UpdatedPlumber.R")
 
-# Update OpenAPI spec dynamically
-existing_spec <- pr$getApiSpec()
-if (!is.null(existing_spec)) {
-  existing_spec$info$title <- api_title
-  existing_spec$info$description <- api_description
-  pr$setApiSpec(existing_spec)
-}
-
-# Only run locally, Docker will handle execution via `main.R`
-if (interactive()) {
-  pr$run(port = 8000, host = "0.0.0.0", swagger = TRUE)
-}
