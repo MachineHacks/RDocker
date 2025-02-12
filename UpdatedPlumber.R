@@ -8,16 +8,19 @@ config <- load_config("Config.json")
 api_title <- config$API$TITLE
 api_description <- config$API$DESCRIPTION
 
+# Define API Metadata (Ensure Swagger uses dynamic values)
+#* @apiTitle Dynamic API Title
+#* @apiDescription Dynamic API Description
+
 # Initialize Plumber API
 pr <- Plumber$new()
 
-# Set API Metadata (for Swagger UI)
-#* @apiTitle Dynamic API Title
-#* @apiDescription Dynamic API Description
-existing_spec <- pr$getApiSpec()
-existing_spec$info$title <- api_title
-existing_spec$info$description <- api_description
-pr$setApiSpec(existing_spec)
+# Set OpenAPI Metadata Before API is Initialized
+pr$setDocsCallback(function(spec) {
+  spec$info$title <- api_title
+  spec$info$description <- api_description
+  return(spec)
+})
 
 # Simple GET endpoint to check if the API is working
 #* @get /ping
