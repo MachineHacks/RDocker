@@ -3,7 +3,7 @@
 library(plumber)
 source("/app/Utility.R")  # Load the utility file
 
-config <- load_config("/app/Config.json")
+config <- load_config("Config.json")
 # Extract API Metadata
 api_title <- config$API$TITLE
 api_description <- config$API$DESCRIPTION
@@ -83,25 +83,33 @@ execute_method <- validate_token_decorator(function(req) {
   return(execution_result)
 })
 
-# Initialize Plumber API
+# API Setup
 pr <- plumber$new()
 
-# Register Endpoints
+# Set API Metadata (Title & Description)
+#api_spec <- list(
+#  openapi = "3.0.3",
+#  info = list(
+#    title = "New API Title",
+#    description = "Updated API Description",
+#    version = "1.0.0"
+#  )
+#)
+
+pr <- plumber$new()
 pr$handle("GET", "/ping", ping)
 pr$handle("POST", "/rtoken", rtoken)
 pr$handle("POST", "/execute", execute_method)
 
-# Set API Metadata
-pr$setDocs(
-  list(
-    openapi = "3.0.3",
-    info = list(
-      title = api_title,
-      description = api_description,
-      version = "1.0.0"
-    )
-  )
-)
+#existing_spec <- pr$getApiSpec()
+#existing_spec$info$title <- "API Title: R-Console"
+#existing_spec$info$description <- "Tttttt"
+#pr$setApiSpec(existing_spec) 
 
-# Expose API
-pr
+# Fetch existing OpenAPI spec
+existing_spec <- pr$getApiSpec()
+existing_spec$info$title <- api_title
+existing_spec$info$description <- api_description
+
+# Apply updated spec
+pr$setApiSpec(existing_spec)
