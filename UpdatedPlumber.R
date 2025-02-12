@@ -107,9 +107,16 @@ pr$handle("POST", "/execute", execute_method)
 #pr$setApiSpec(existing_spec) 
 
 # Fetch existing OpenAPI spec
-existing_spec <- pr$getApiSpec()
-existing_spec$info$title <- api_title
-existing_spec$info$description <- api_description
+existing_spec <- list(
+  openapi = "3.0.3",
+  info = list(
+    title = api_title,       # Use dynamic API title from config
+    description = api_description, # Use dynamic API description from config
+    version = "1.0.0"
+  )
+)
 
 # Apply updated spec
 pr$setApiSpec(existing_spec)
+
+
