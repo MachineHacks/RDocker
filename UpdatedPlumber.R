@@ -83,13 +83,17 @@ execute_method <- validate_token_decorator(function(req) {
   return(execution_result)
 })
 
-# Load Plumber API
 pr <- plumb("UpdatedPlumber.R")
 
-# Fetch and modify OpenAPI spec
+# Update OpenAPI spec dynamically
 existing_spec <- pr$getApiSpec()
 if (!is.null(existing_spec)) {
   existing_spec$info$title <- api_title
   existing_spec$info$description <- api_description
   pr$setApiSpec(existing_spec)
+}
+
+# Only run locally, Docker will handle execution via `main.R`
+if (interactive()) {
+  pr$run(port = 8000, host = "0.0.0.0", swagger = TRUE)
 }
