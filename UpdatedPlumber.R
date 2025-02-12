@@ -8,8 +8,26 @@ config <- load_config("Config.json")
 api_title <- config$API$TITLE
 api_description <- config$API$DESCRIPTION
 
+# Initialize Plumber API
+pr <- plumber$new()
+
+# Define API Endpoints
+pr$handle("GET", "/ping", ping)
+pr$handle("POST", "/rtoken", rtoken)
+pr$handle("POST", "/execute", execute_method)
+
 #* @apiTitle Dynamic API Title
 #* @apiDescription Dynamic API Description
+# Set API Metadata
+existing_spec <- pr$getApiSpec()
+existing_spec$info$title <- api_title
+existing_spec$info$description <- api_description
+pr$setApiSpec(existing_spec)
+
+# Start API (ONLY if this file is executed directly)
+if (interactive()) {
+  pr$run(port = 8000, host = "0.0.0.0")
+}
 
 
 # Simple GET endpoint to check if the API is working
@@ -83,22 +101,7 @@ execute_method <- validate_token_decorator(function(req) {
   return(execution_result)
 })
 
-# Initialize Plumber API
-pr <- plumber$new()
 
-# Define API Endpoints
-pr$handle("GET", "/ping", ping)
-pr$handle("POST", "/rtoken", rtoken)
-pr$handle("POST", "/execute", execute_method)
 
-# Set API Metadata
-existing_spec <- pr$getApiSpec()
-existing_spec$info$title <- api_title
-existing_spec$info$description <- api_description
-pr$setApiSpec(existing_spec)
 
-# Start API (ONLY if this file is executed directly)
-if (interactive()) {
-  pr$run(port = 8000, host = "0.0.0.0")
-}
 
