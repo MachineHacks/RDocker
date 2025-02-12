@@ -1,26 +1,16 @@
 # main.R - API Routes and Function Calls
 
 library(plumber)
-source("Utility.R")  # Load the utility file
+source("/app/Utility.R")  # Load the utility file
 
-config <- load_config("Config.json")
+config <- load_config("/app/Config.json")
 # Extract API Metadata
 api_title <- config$API$TITLE
 api_description <- config$API$DESCRIPTION
 
-# Define API Metadata (Ensure Swagger uses dynamic values)
 #* @apiTitle Dynamic API Title
 #* @apiDescription Dynamic API Description
 
-# Initialize Plumber API
-pr <- Plumber$new()
-
-# Set OpenAPI Metadata Before API is Initialized
-pr$setDocsCallback(function(spec) {
-  spec$info$title <- api_title
-  spec$info$description <- api_description
-  return(spec)
-})
 
 # Simple GET endpoint to check if the API is working
 #* @get /ping
@@ -94,13 +84,14 @@ execute_method <- validate_token_decorator(function(req) {
 })
 
 
-# Attach endpoints
+# Initialize Plumber API
+pr <- plumber$new()
 pr$handle("GET", "/ping", ping)
 pr$handle("POST", "/rtoken", rtoken)
 pr$handle("POST", "/execute", execute_method)
 
-
-
-assign("pr", pr, envir = .GlobalEnv)
-
-
+# Update API metadata dynamically
+existing_spec <- pr$getApiSpec()
+existing_spec$info$title <- api_title
+existing_spec$info$description <- api_description
+pr$setApiSpec(existing_spec)
