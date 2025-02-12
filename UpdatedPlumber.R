@@ -3,8 +3,8 @@
 library(plumber)
 source("Utility.R")  # Load the utility file
 
-# Load API metadata from config.json
-config <- fromJSON("config.json")
+config <- load_config("Config.json")
+# Extract API Metadata
 api_title <- config$API$TITLE
 api_description <- config$API$DESCRIPTION
 
