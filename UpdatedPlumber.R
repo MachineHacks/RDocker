@@ -1,7 +1,7 @@
 # main.R - API Routes and Function Calls
 
 library(plumber)
-source("/app/Utility.R")  # Load the utility file
+source("Utility.R")  # Load the utility file
 
 config <- load_config("Config.json")
 # Extract API Metadata
@@ -101,15 +101,17 @@ pr$handle("GET", "/ping", ping)
 pr$handle("POST", "/rtoken", rtoken)
 pr$handle("POST", "/execute", execute_method)
 
-# Set OpenAPI metadata dynamically
-pr$setApiSpec(list(
-  openapi = "3.0.3",
-  info = list(
-    title = api_title,        # Dynamic API title from config
-    description = api_description,  # Dynamic API description from config
-    version = "1.0.0"
-  )
-))
+#existing_spec <- pr$getApiSpec()
+#existing_spec$info$title <- "API Title: R-Console"
+#existing_spec$info$description <- "Tttttt"
+#pr$setApiSpec(existing_spec) 
 
+# Fetch existing OpenAPI spec
+existing_spec <- pr$getApiSpec()
+existing_spec$info$title <- api_title
+existing_spec$info$description <- api_description
 
+# Apply updated spec
+pr$setApiSpec(existing_spec)
 
+pr$run(port = 8000, swagger = TRUE) 
