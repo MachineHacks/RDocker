@@ -26,6 +26,7 @@ RUN R -e "install.packages('jose')"
 RUN R -e "install.packages('digest')"
 RUN R -e "install.packages('ini')"
 RUN R -e "install.packages('base64enc')"
+RUN R -e "install.packages('httr')"
 
 # Install additional R packages and their dependencies
 RUN R -e "install.packages(c('AER', 'cragg', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', 'brant', 'erer', 'nnet', 'marginaleffects', 'usmap'), repos='https://cran.r-project.org')"
@@ -36,7 +37,7 @@ COPY Test.R /app/Test.R
 COPY Tetsting.R /app/Tetsting.R
 COPY main.R /app/main.R
 COPY UpdatedPlumber.R /app/UpdatedPlumber.R
-COPY Config.ini /app/Config.ini
+COPY Config.json /app/Config.json
 
 # Set the working directory
 WORKDIR /app
