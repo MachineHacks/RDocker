@@ -83,22 +83,13 @@ execute_method <- validate_token_decorator(function(req) {
   return(execution_result)
 })
 
-pr <- plumber$new()
-pr$handle("GET", "/ping", ping)
-pr$handle("POST", "/rtoken", rtoken)
-pr$handle("POST", "/execute", execute_method)
+# Load Plumber API
+pr <- plumb("UpdatedPlumber.R")
 
-#existing_spec <- pr$getApiSpec()
-#existing_spec$info$title <- "API Title: R-Console"
-#existing_spec$info$description <- "Tttttt"
-#pr$setApiSpec(existing_spec) 
-
-# Fetch existing OpenAPI spec
+# Fetch and modify OpenAPI spec
 existing_spec <- pr$getApiSpec()
-existing_spec$info$title <- api_title
-existing_spec$info$description <- api_description
-
-# Apply updated spec
-pr$setApiSpec(existing_spec)
-
-pr$run(port = 8000, swagger = TRUE) 
+if (!is.null(existing_spec)) {
+  existing_spec$info$title <- api_title
+  existing_spec$info$description <- api_description
+  pr$setApiSpec(existing_spec)
+}
