@@ -9,7 +9,7 @@ api_title <- config$API$TITLE
 api_description <- config$API$DESCRIPTION
 
 # Initialize Plumber API
-pr <- plumb()
+pr <- plumb("UpdatedPlumber.R")
 
 # Set Swagger API metadata
 pr <- pr %>%
