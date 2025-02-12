@@ -83,15 +83,25 @@ execute_method <- validate_token_decorator(function(req) {
   return(execution_result)
 })
 
-
 # Initialize Plumber API
 pr <- plumber$new()
+
+# Register Endpoints
 pr$handle("GET", "/ping", ping)
 pr$handle("POST", "/rtoken", rtoken)
 pr$handle("POST", "/execute", execute_method)
 
-# Update API metadata dynamically
-existing_spec <- pr$getApiSpec()
-existing_spec$info$title <- api_title
-existing_spec$info$description <- api_description
-pr$setApiSpec(existing_spec)
+# Set API Metadata
+pr$setDocs(
+  list(
+    openapi = "3.0.3",
+    info = list(
+      title = api_title,
+      description = api_description,
+      version = "1.0.0"
+    )
+  )
+)
+
+# Expose API
+pr
