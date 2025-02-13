@@ -16,27 +16,18 @@ RUN apt-get update && apt-get install -y \
     libudunits2-dev \
     && apt-get clean
 
-# Install required R packages
-RUN R -e "install.packages('plumber')"
-RUN R -e "install.packages('car')"
-RUN R -e "install.packages('dynlm')"
-RUN R -e "install.packages('Mfx')"
-RUN R -e "install.packages('jsonlite')"
-RUN R -e "install.packages('jose')"
-#RUN R -e "install.packages('digest')"
-RUN R -e "install.packages('ini')"
-RUN R -e "install.packages('base64enc')"
-RUN R -e "install.packages('httr')"
+# Install required R packages in parallel
+RUN R -e "install.packages(c('plumber', 'car', 'dynlm', 'Mfx', 'jsonlite', 'jose', 'digest', 'ini', 'base64enc'), \
+                            Ncpus = parallel::detectCores(), repos='https://cran.r-project.org')"
 
-# Install additional R packages and their dependencies
-RUN R -e "install.packages(c('AER', 'cragg', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', 'brant', 'erer', 'nnet', 'marginaleffects', 'usmap'), repos='https://cran.r-project.org')"
+# Install additional R packages in parallel
+RUN R -e "install.packages(c('AER', 'cragg', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', \
+                            'brant', 'erer', 'nnet', 'marginaleffects', 'usmap'), \
+                            Ncpus = parallel::detectCores(), repos='https://cran.r-project.org')"
 
-# Copy your R scripts into the container
-COPY plumber_app.R /app/plumber_app.R
-COPY Test.R /app/Test.R
-COPY Tetsting.R /app/Tetsting.R
+# Copy application files
+COPY Plumber.R /app/Plumber.R
 COPY main.R /app/main.R
-COPY UpdatedPlumber.R /app/UpdatedPlumber.R
 COPY Config.json /app/Config.json
 COPY Utility.R /app/Utility.R
 
