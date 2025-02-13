@@ -17,15 +17,18 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 
 # Install required R packages in parallel
-RUN R -e "install.packages(c('plumber', 'car', 'dynlm', 'Mfx', 'jsonlite', 'jose', 'digest', 'ini', 'base64enc'))"
+RUN R -e "install.packages(c('plumber', 'car', 'dynlm', 'Mfx', 'jsonlite', 'jose', 'digest', 'ini', 'base64enc'), \
+                            Ncpus = parallel::detectCores(), repos='https://cran.r-project.org')"
 
 # Install additional R packages in parallel
 RUN R -e "install.packages(c('AER', 'cragg', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', \
                             'brant', 'erer', 'nnet', 'marginaleffects', 'usmap'), \
                             Ncpus = parallel::detectCores(), repos='https://cran.r-project.org')"
 
-# Copy application files
-COPY Plumber.R /app/Plumber.R
+# Copy your custom plumber script
+COPY plumber_app.R /app/plumber_app.R
+COPY Test.R /app/Test.R
+COPY Tetsting.R /app/Tetsting.R
 COPY main.R /app/main.R
 COPY Config.json /app/Config.json
 COPY Utility.R /app/Utility.R
