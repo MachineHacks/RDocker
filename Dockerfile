@@ -17,8 +17,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 
 # Install required R packages in parallel
-RUN R -e "install.packages(c('plumber', 'car', 'dynlm', 'Mfx', 'jsonlite', 'jose', 'digest', 'ini', 'base64enc'), \
-                            Ncpus = parallel::detectCores())"
+RUN R -e "install.packages(c('plumber', 'car', 'dynlm', 'Mfx', 'jsonlite', 'jose', 'digest', 'ini', 'base64enc'))"
 
 # Install additional R packages in parallel
 RUN R -e "install.packages(c('AER', 'cragg', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', \
