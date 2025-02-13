@@ -2,7 +2,7 @@
 
 library(jsonlite)
 library(jose)
-library(digest)
+#library(digest)
 library(openssl)
 library(base64enc)
 library(httr)
