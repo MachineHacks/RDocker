@@ -84,7 +84,8 @@ execute_method <- validate_token_decorator(function(req) {
 })
 
 # API Setup
-pr <- plumber$new()
+pr <- Plumber$new()
+
 
 # Set API Metadata (Title & Description)
 #api_spec <- list(
