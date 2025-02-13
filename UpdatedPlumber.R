@@ -96,7 +96,8 @@ pr <- plumber$new()
 #  )
 #)
 
-pr <- plumber$new()
+pr <- Plumber$new()
+
 pr$handle("GET", "/ping", ping)
 pr$handle("POST", "/rtoken", rtoken)
 pr$handle("POST", "/execute", execute_method)
