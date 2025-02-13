@@ -47,4 +47,4 @@ WORKDIR /app
 EXPOSE 8000
 
 # Start the R server with plumber API
-ENTRYPOINT ["Rscript", "/app/UpdatedPlumber.R"]
+ENTRYPOINT ["Rscript", "/app/main.R"]
