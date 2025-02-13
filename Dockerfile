@@ -26,9 +26,7 @@ RUN R -e "install.packages(c('AER', 'cragg', 'moments', 'plm', 'sandwich', 'star
                             Ncpus = parallel::detectCores(), repos='https://cran.r-project.org')"
 
 # Copy your custom plumber script
-COPY plumber_app.R /app/plumber_app.R
-COPY Test.R /app/Test.R
-COPY Tetsting.R /app/Tetsting.R
+COPY plumber_app.R /app/UpdatedPlumber.R
 COPY main.R /app/main.R
 COPY Config.json /app/Config.json
 COPY Utility.R /app/Utility.R
