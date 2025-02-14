@@ -16,7 +16,7 @@ This project provides an R compiler for the **SW5 application**, enabling users 
 - **Security**:
   - Only authorized users can obtain a token.
   - The client must provide valid `CLIENT_ID` and `PASSWORD` in the request headers.
-  - The provided credentials are validated against predefined values.
+  - The provided credentials (`CLIENT_ID`, `PASSWORD`) are validated against predefined values.
 - **Response**:
   - If authentication is successful, a JWT token is returned.
   - If authentication fails, an error message is returned.
@@ -31,11 +31,11 @@ This project provides an R compiler for the **SW5 application**, enabling users 
   ```json
   {
     "language": "RLanguage",
-    "stdin": "Test123",
+    "stdin": "Std123",
     "files": [
       {
-        "name": "Dec.py",
-        "content": "library(car);data(Prestige);head(Prestige)"
+        "name": "Test.py",
+        "content": "print('Hello World')"
       }
     ]
   }
