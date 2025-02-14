@@ -29,9 +29,7 @@ RUN R -e "install.packages('ini')"
 RUN R -e "install.packages('base64enc')"
 
 # Install additional R packages in parallel
-RUN R -e "install.packages(c('AER', 'cragg', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', \
-                            'brant', 'erer', 'nnet', 'marginaleffects', 'usmap'), \
-                            Ncpus = parallel::detectCores(), repos='https://cran.r-project.org')"
+RUN R -e "install.packages(c('AER', 'cragg', 'moments', 'plm', 'sandwich', 'stargazer', 'tseries', 'urca', 'vars', 'brant', 'erer', 'nnet', 'marginaleffects', 'usmap'), repos='https://cran.r-project.org')"
 
 # Copy your custom plumber script
 COPY plumber_app.R /app/UpdatedPlumber.R
