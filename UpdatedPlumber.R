@@ -102,4 +102,5 @@ existing_spec$paths$`/execute`$post$description <- "\n\n3. **execute (POST Metho
 pr$setApiSpec(existing_spec)
 
 # Run the API
-pr$run(port = 8000, swagger = TRUE)
+pr$run(host = "0.0.0.0", port = 8000, swagger = TRUE)
+
