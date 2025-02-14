@@ -1,6 +1,6 @@
 ## R-Console Setup & Troubleshooting
 
-# R Console Application
+**R Console Application**
 
 ## Overview
 This project provides an R compiler for the **SW5 application**, enabling users to execute R programs in the backend. The application is secured using JWT authentication and exposes three primary API endpoints: `ping`, `rtoken`, and `execute`.
