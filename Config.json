@@ -1,32 +1,19 @@
 {
-  "API": {
-    "TITLE": "Title: R-Console",
-    "DESCRIPTION": "**Project Description:** \n\nThe R Compiler API is designed to provide a seamless and secure environment for executing R scripts via a RESTful interface. The API incorporates robust authentication mechanisms and structured request handling to ensure authorized access and efficient execution of R code.\n\nCore Functionalities:\n\n1. **Ping (GET Method)**:\n- The ping endpoint serves as a health check for the API, verifying server availability.\n- It returns a simple response indicating whether the server is up and running.\n\n2. **rtoken (POST Method)**:\n- The rtoken endpoint is responsible for user authentication and authorization.\n- It accepts client_id and password in the request headers and generates a JWT token upon successful validation.\n- The JWT token is required for subsequent API requests to ensure that only authorized users can execute R scripts.\n\n3. **execute (POST Method)**:\n- The execute endpoint enables users to run R scripts securely.\n- It requires a valid JWT token (obtained from the rtoken endpoint) for authentication.\n- The request payload must be in JSON format, containing the necessary script execution parameters.\n- The response includes the execution status and output, ensuring efficient validation and processing."
-  },
   "CREDENTIALS": [
-    {
-      "CLIENT_ID": "9b6d0fd1-51c3-4e16-9c83-c8fabc4742de",
-      "PASSWORD": "j8h#Vb3Qz!F1wR9s",
-      "CLIENT_SECRET": "a6f9b35e-5cdb-4f8c-a116-c2134e0be01b"
+    { 
+      "CLIENT_ID": "9b6d0fd1-51c3-4e16-9c83-c8fabc4742de", 
+      "PASSWORD": "j8h#Vb3Qz!F1wR9s", 
+      "CLIENT_SECRET": "a6f9b35e-5cdb-4f8c-a116-c2134e0be01b" 
     },
-    {
-      "CLIENT_ID": "2a6be8c9-8d8e-4d8b-8207-16f154699a93",
-      "PASSWORD": "KxT!7cM@2Zd^3pLp",
-      "CLIENT_SECRET": "f92b44e7-393b-49fa-975f-08ea5d9b58c6"
+    { 
+      "CLIENT_ID": "2a6be8c9-8d8e-4d8b-8207-16f154699a93", 
+      "PASSWORD": "KxT!7cM@2Zd^3pLp", 
+      "CLIENT_SECRET": "f92b44e7-393b-49fa-975f-08ea5d9b58c6" 
     },
-    {
-      "CLIENT_ID": "06a83234-cf3b-4f49-8df6-10bda90212e5",
-      "PASSWORD": "F7gP@zWq9BkL8sT0",
-      "CLIENT_SECRET": "d03fd7d0-c29d-4626-83f4-d5e1feffb1b5"
+    { 
+      "CLIENT_ID": "06a83234-cf3b-4f49-8df6-10bda90212e5", 
+      "PASSWORD": "F7gP@zWq9BkL8sT0", 
+      "CLIENT_SECRET": "d03fd7d0-c29d-4626-83f4-d5e1feffb1b5" 
     }
-  ],
-  "GRAYLOG": {
-    "PORT": 12201,
-    "HOST_NAME": "logs.wwnorton.com",
-    "CONNECTION": "wan",
-    "ENVIRONMENT": "dev",
-    "MAX_CHUNK_SIZE_WAN": 1420,
-    "MAX_CHUNK_SIZE_LAN": 8154,
-    "APPLICATION": "R-Console"
-  }
+  ]
 }
