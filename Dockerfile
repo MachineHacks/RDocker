@@ -25,7 +25,7 @@ RUN R -e "install.packages('Mfx')"
 RUN R -e "install.packages('jsonlite')"
 RUN R -e "install.packages('jose')"
 RUN R -e "install.packages('digest')"
-RUN R -e "install.packages('ini')"
+RUN R -e "install.packages('R.utils')"
 RUN R -e "install.packages('base64enc')"
 
 # Install additional R packages in parallel
